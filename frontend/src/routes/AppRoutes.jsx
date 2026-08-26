@@ -1,35 +1,129 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-
-import AuthLayout from "../layouts/AuthLayout";
-import DashboardLayout from "../layouts/DashboardLayout";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 
 import LoginPage from "../pages/auth/LoginPage";
-import DashboardPage from "../pages/dashboard/DashboardPage";
-import CustomerListPage from "../pages/customers/CustomerListPage";
-import RequestListPage from "../pages/requests/RequestListPage";
-import ProfilePage from "../pages/profile/ProfilePage";
+import MainLayout from "../layouts/MainLayout";
 
-function AppRoutes() {
+import GuestRoute from "./GuestRoute";
+import ProtectedRoute from "./ProtectedRoute";
+import RoleRoute from "./RoleRoute";
+
+const Placeholder = ({ title }) => (
+  <div className="p-8">
+    <h1 className="text-2xl font-bold text-gray-900">
+      {title}
+    </h1>
+  </div>
+);
+
+const AppRoutes = () => {
   return (
     <BrowserRouter>
       <Routes>
-
-        {/* Public Routes */}
-        <Route element={<AuthLayout />}>
-          <Route path="/login" element={<LoginPage />} />
+        {/* Guest Routes */}
+        <Route element={<GuestRoute />}>
+          <Route
+            path="/login"
+            element={<LoginPage />}
+          />
         </Route>
 
-        {/* Application Routes */}
-        <Route element={<DashboardLayout />}>
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/customers" element={<CustomerListPage />} />
-          <Route path="/requests" element={<RequestListPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
+        {/* Protected Routes */}
+        <Route element={<ProtectedRoute />}>
+          <Route element={<MainLayout />}>
+            <Route
+              path="/dashboard"
+              element={
+                <Placeholder title="Dashboard" />
+              }
+            />
+
+            <Route
+              path="/customers"
+              element={
+                <Placeholder title="Customers" />
+              }
+            />
+
+            <Route
+              path="/requests"
+              element={
+                <Placeholder title="Service Requests" />
+              }
+            />
+
+            {/* Admin + Manager */}
+            <Route
+              element={
+                <RoleRoute
+                  allowedRoles={[
+                    "admin",
+                    "manager",
+                  ]}
+                />
+              }
+            >
+              <Route
+                path="/teams"
+                element={
+                  <Placeholder title="Teams" />
+                }
+              />
+
+              <Route
+                path="/reports"
+                element={
+                  <Placeholder title="Reports" />
+                }
+              />
+            </Route>
+
+            {/* Admin only */}
+            <Route
+              element={
+                <RoleRoute
+                  allowedRoles={["admin"]}
+                />
+              }
+            >
+              <Route
+                path="/users"
+                element={
+                  <Placeholder title="Users" />
+                }
+              />
+            </Route>
+          </Route>
         </Route>
 
+        {/* Default */}
+        <Route
+          path="/"
+          element={
+            <Navigate
+              to="/dashboard"
+              replace
+            />
+          }
+        />
+
+        {/* Unknown route */}
+        <Route
+          path="*"
+          element={
+            <Navigate
+              to="/dashboard"
+              replace
+            />
+          }
+        />
       </Routes>
     </BrowserRouter>
   );
-}
+};
 
 export default AppRoutes;
