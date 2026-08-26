@@ -3,8 +3,14 @@ const cors = require("cors");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 
+const authRoutes = require("./routes/authRoutes");
+const userRoutes = require("./routes/userRoutes");
+const teamRoutes = require("./routes/teamRoutes");
+const customerRoutes = require("./routes/customerRoutes");
+
 const app = express();
 
+// Security
 app.use(helmet());
 
 app.use(
@@ -14,11 +20,11 @@ app.use(
   })
 );
 
+// Body parsing
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const authRoutes = require("./routes/authRoutes");
-
+// API rate limiting
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 100,
@@ -32,8 +38,13 @@ const apiLimiter = rateLimit({
 
 app.use("/api", apiLimiter);
 
+// Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/teams", teamRoutes);
+app.use("/api/customers", customerRoutes);
 
+// Health check
 app.get("/api/health", (req, res) => {
   res.status(200).json({
     success: true,
@@ -42,6 +53,7 @@ app.get("/api/health", (req, res) => {
   });
 });
 
+// 404 handler
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -49,6 +61,7 @@ app.use((req, res) => {
   });
 });
 
+// Centralized error handler
 app.use((err, req, res, next) => {
   console.error(err);
 

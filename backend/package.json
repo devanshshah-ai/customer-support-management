@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
-    "test": "echo \"Tests will be configured in the testing module\""
+    "test": "echo \"Tests will be configured in the testing module\"",
+    "seed:admin": "node src/utils/seedAdmin.js"
   },
   "keywords": [],
   "author": "",
