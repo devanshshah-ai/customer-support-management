@@ -17,6 +17,8 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+const authRoutes = require("./routes/authRoutes");
+
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 100,
@@ -29,6 +31,8 @@ const apiLimiter = rateLimit({
 });
 
 app.use("/api", apiLimiter);
+
+app.use("/api/auth", authRoutes);
 
 app.get("/api/health", (req, res) => {
   res.status(200).json({
@@ -50,13 +54,19 @@ app.use((err, req, res, next) => {
 
   const statusCode = err.statusCode || 500;
 
-  res.status(statusCode).json({
+  const response = {
     success: false,
     message:
       statusCode === 500
         ? "Internal server error"
         : err.message,
-  });
+  };
+
+  if (err.details) {
+    response.details = err.details;
+  }
+
+  res.status(statusCode).json(response);
 });
 
 module.exports = app;
