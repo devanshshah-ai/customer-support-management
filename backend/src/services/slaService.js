@@ -5,7 +5,10 @@ const SLA_HOURS = {
   Low: 48,
 };
 
-const calculateSlaDeadline = (severity, createdAt = new Date()) => {
+const calculateSlaDeadline = (
+  severity,
+  createdAt = new Date()
+) => {
   const hours = SLA_HOURS[severity];
 
   if (!hours) {
@@ -25,33 +28,37 @@ const getSlaStatus = (
   createdAt,
   resolutionDate = null
 ) => {
-  const now = new Date();
+  const deadline = new Date(slaDeadline);
 
+  // Resolved/closed requests are evaluated using their
+  // actual resolution time.
   if (status === "Resolved" || status === "Closed") {
-    const resolvedAt = resolutionDate
-      ? new Date(resolutionDate)
-      : now;
+    if (!resolutionDate) {
+      return "RESOLVED_WITHIN_SLA";
+    }
 
-    return resolvedAt <= new Date(slaDeadline)
+    return new Date(resolutionDate) <= deadline
       ? "RESOLVED_WITHIN_SLA"
       : "RESOLVED_AFTER_SLA";
   }
 
-  const deadline = new Date(slaDeadline);
+  const now = new Date();
 
   if (now > deadline) {
     return "BREACHED";
   }
 
-  const remainingTime =
-    deadline.getTime() - now.getTime();
-
-  const totalTime =
+  const totalDuration =
     deadline.getTime() -
     new Date(createdAt).getTime();
 
+  const remainingDuration =
+    deadline.getTime() - now.getTime();
+
   const remainingPercentage =
-    (remainingTime / totalTime) * 100;
+    totalDuration > 0
+      ? (remainingDuration / totalDuration) * 100
+      : 0;
 
   if (remainingPercentage <= 25) {
     return "APPROACHING";
@@ -65,8 +72,8 @@ const getSlaHours = (severity) => {
 };
 
 module.exports = {
+  SLA_HOURS,
   calculateSlaDeadline,
   getSlaStatus,
   getSlaHours,
-  SLA_HOURS,
 };
