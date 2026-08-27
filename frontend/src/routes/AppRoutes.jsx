@@ -17,6 +17,7 @@ import CustomerListPage from "../pages/customers/CustomerListPage";
 import ServiceRequestsPage from "../pages/requests/ServiceRequestsPage";
 import TeamListPage from "../pages/teams/TeamListPage";
 import UserListPage from "../pages/users/UserListPage";
+import ReportsPage from "../pages/reports/ReportsPage";
 
 const Placeholder = ({ title }) => (
   <div className="p-8">
@@ -31,7 +32,9 @@ const AppRoutes = () => {
     <BrowserRouter>
       <Routes>
 
+        {/* ==================== */}
         {/* Guest Routes */}
+        {/* ==================== */}
 
         <Route element={<GuestRoute />}>
           <Route
@@ -41,7 +44,9 @@ const AppRoutes = () => {
         </Route>
 
 
+        {/* ==================== */}
         {/* Protected Routes */}
+        {/* ==================== */}
 
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>
@@ -70,7 +75,9 @@ const AppRoutes = () => {
             />
 
 
+            {/* ==================== */}
             {/* Admin + Manager */}
+            {/* ==================== */}
 
             <Route
               element={
@@ -83,22 +90,26 @@ const AppRoutes = () => {
               }
             >
 
+              {/* Teams */}
+
               <Route
                 path="/teams"
                 element={<TeamListPage />}
               />
 
+              {/* Reports */}
+
               <Route
                 path="/reports"
-                element={
-                  <Placeholder title="Reports" />
-                }
+                element={<ReportsPage />}
               />
 
             </Route>
 
 
+            {/* ==================== */}
             {/* Admin Only */}
+            {/* ==================== */}
 
             <Route
               element={
@@ -107,6 +118,8 @@ const AppRoutes = () => {
                 />
               }
             >
+
+              {/* Users */}
 
               <Route
                 path="/users"
@@ -119,7 +132,9 @@ const AppRoutes = () => {
         </Route>
 
 
-        {/* Default */}
+        {/* ==================== */}
+        {/* Default Route */}
+        {/* ==================== */}
 
         <Route
           path="/"
@@ -132,7 +147,9 @@ const AppRoutes = () => {
         />
 
 
+        {/* ==================== */}
         {/* Unknown Route */}
+        {/* ==================== */}
 
         <Route
           path="*"
