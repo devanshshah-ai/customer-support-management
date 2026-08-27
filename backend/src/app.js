@@ -8,6 +8,7 @@ const userRoutes = require("./routes/userRoutes");
 const teamRoutes = require("./routes/teamRoutes");
 const customerRoutes = require("./routes/customerRoutes");
 const serviceRequestRoutes = require("./routes/serviceRequestRoutes");
+const messageRoutes = require("./routes/messageRoutes");
 
 const app = express();
 
@@ -45,6 +46,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/teams", teamRoutes);
 app.use("/api/customers", customerRoutes);
 app.use("/api/requests", serviceRequestRoutes);
+app.use("/api/requests", messageRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {
