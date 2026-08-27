@@ -10,6 +10,8 @@ const customerRoutes = require("./routes/customerRoutes");
 const serviceRequestRoutes = require("./routes/serviceRequestRoutes");
 const messageRoutes = require("./routes/messageRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
+const auditLogRoutes = require("./routes/auditLogRoutes");
 
 const app = express();
 
@@ -49,6 +51,8 @@ app.use("/api/customers", customerRoutes);
 app.use("/api/requests", serviceRequestRoutes);
 app.use("/api/requests", messageRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/audit-logs",auditLogRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {
