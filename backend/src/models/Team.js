@@ -28,7 +28,6 @@ const teamSchema = new mongoose.Schema(
     isActive: {
       type: Boolean,
       default: true,
-      index: true,
     },
   },
   {
@@ -36,7 +35,6 @@ const teamSchema = new mongoose.Schema(
   }
 );
 
-teamSchema.index({ name: 1 });
 teamSchema.index({ isActive: 1 });
 
 module.exports = mongoose.model("Team", teamSchema);
