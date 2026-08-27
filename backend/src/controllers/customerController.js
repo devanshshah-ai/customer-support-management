@@ -18,7 +18,9 @@ const create = async (req, res, next) => {
 
     if (!validationResult.success) {
       const error = new Error("Validation failed");
+
       error.statusCode = 400;
+
       error.details =
         validationResult.error.flatten();
 
@@ -75,16 +77,15 @@ const getAll = async (req, res, next) => {
 
 const getOne = async (req, res, next) => {
   try {
-    const customer = await getCustomerById(
+    const result = await getCustomerById(
       req.params.id
     );
 
     return res.status(200).json({
       success: true,
-      message: "Customer retrieved successfully",
-      data: {
-        customer,
-      },
+      message:
+        "Customer details fetched successfully",
+      data: result,
     });
   } catch (error) {
     next(error);
@@ -98,7 +99,9 @@ const update = async (req, res, next) => {
 
     if (!validationResult.success) {
       const error = new Error("Validation failed");
+
       error.statusCode = 400;
+
       error.details =
         validationResult.error.flatten();
 

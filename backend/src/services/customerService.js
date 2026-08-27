@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
+
 const Customer = require("../models/Customer");
+const ServiceRequest = require("../models/ServiceRequest");
 
 const validateObjectId = (id, fieldName = "ID") => {
   if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -121,19 +123,21 @@ const getCustomers = async ({
     ? sortBy
     : "createdAt";
 
-  const safeSortOrder = sortOrder === "asc" ? 1 : -1;
+  const safeSortOrder =
+    sortOrder === "asc" ? 1 : -1;
 
-  const [customers, totalCustomers] = await Promise.all([
-    Customer.find(query)
-      .sort({
-        [safeSortBy]: safeSortOrder,
-      })
-      .skip(skip)
-      .limit(pageLimit)
-      .lean(),
+  const [customers, totalCustomers] =
+    await Promise.all([
+      Customer.find(query)
+        .sort({
+          [safeSortBy]: safeSortOrder,
+        })
+        .skip(skip)
+        .limit(pageLimit)
+        .lean(),
 
-    Customer.countDocuments(query),
-  ]);
+      Customer.countDocuments(query),
+    ]);
 
   const totalPages = Math.ceil(
     totalCustomers / pageLimit
@@ -153,6 +157,9 @@ const getCustomers = async ({
   };
 };
 
+/*
+ * Get customer profile + complete service request history
+ */
 const getCustomerById = async (customerId) => {
   validateObjectId(customerId, "customer ID");
 
@@ -166,7 +173,36 @@ const getCustomerById = async (customerId) => {
     throw error;
   }
 
-  return sanitizeCustomer(customer);
+  /*
+   * Fetch all service requests belonging to
+   * this customer.
+   *
+   * ServiceRequest already has:
+   *
+   * customer: {
+   *   type: ObjectId,
+   *   ref: "Customer"
+   * }
+   *
+   * and an index on:
+   *
+   * { customer: 1, createdAt: -1 }
+   */
+  const serviceRequests = await ServiceRequest.find({
+    customer: customerId,
+  })
+    .populate("assignedTeam", "name")
+    .populate("assignedAgent", "name email")
+    .sort({ createdAt: -1 })
+    .lean();
+
+  return {
+    customer: sanitizeCustomer(customer),
+
+    serviceRequests,
+
+    serviceRequestCount: serviceRequests.length,
+  };
 };
 
 const updateCustomer = async (
@@ -175,7 +211,9 @@ const updateCustomer = async (
 ) => {
   validateObjectId(customerId, "customer ID");
 
-  const customer = await Customer.findById(customerId);
+  const customer = await Customer.findById(
+    customerId
+  );
 
   if (!customer) {
     const error = new Error("Customer not found");
@@ -184,9 +222,8 @@ const updateCustomer = async (
   }
 
   if (customerData.email !== undefined) {
-    const normalizedEmail = customerData.email
-      .trim()
-      .toLowerCase();
+    const normalizedEmail =
+      customerData.email.trim().toLowerCase();
 
     const duplicateCustomer =
       await Customer.findOne({
@@ -216,11 +253,13 @@ const updateCustomer = async (
   }
 
   if (customerData.company !== undefined) {
-    customer.company = customerData.company.trim();
+    customer.company =
+      customerData.company.trim();
   }
 
   if (customerData.location !== undefined) {
-    customer.location = customerData.location.trim();
+    customer.location =
+      customerData.location.trim();
   }
 
   if (customerData.customerType !== undefined) {
@@ -252,10 +291,23 @@ const deleteCustomer = async (customerId) => {
   }
 
   /*
-   * Later, once ServiceRequests exist, we should
-   * prevent deleting a customer that has service
-   * history or use a soft-delete strategy.
+   * Prevent deleting a customer who has
+   * service request history.
    */
+  const serviceRequestExists =
+    await ServiceRequest.exists({
+      customer: customerId,
+    });
+
+  if (serviceRequestExists) {
+    const error = new Error(
+      "Customer cannot be deleted because service request history exists"
+    );
+
+    error.statusCode = 409;
+
+    throw error;
+  }
 
   await Customer.findByIdAndDelete(customerId);
 
