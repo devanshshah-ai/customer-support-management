@@ -1,0 +1,233 @@
+.create-user-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.create-user-modal {
+  width: 100%;
+  max-width: 590px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.18);
+}
+
+.create-user-header {
+  padding: 18px 20px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+.create-user-title {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.create-user-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: #eef2ff;
+  color: #4f46e5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.create-user-title h2 {
+  margin: 0;
+  color: #111827;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.create-user-title p {
+  margin: 3px 0 0;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.create-user-close {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.create-user-close:hover:not(:disabled) {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.create-user-form {
+  padding: 20px;
+}
+
+.create-user-api-error {
+  margin-bottom: 16px;
+  padding: 10px 12px;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 12px;
+}
+
+.create-user-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 15px;
+}
+
+.create-user-field {
+  min-width: 0;
+}
+
+.create-user-field.full-width {
+  grid-column: 1 / -1;
+}
+
+.create-user-field label {
+  display: block;
+  margin-bottom: 6px;
+  color: #374151;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.create-user-field label span {
+  margin-left: 3px;
+  color: #dc2626;
+}
+
+.create-user-field input,
+.create-user-field select {
+  width: 100%;
+  height: 40px;
+  box-sizing: border-box;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  outline: none;
+  background: #ffffff;
+  padding: 0 11px;
+  color: #111827;
+  font-size: 13px;
+}
+
+.create-user-field input:focus,
+.create-user-field select:focus {
+  border-color: #818cf8;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.08);
+}
+
+.create-user-field input:disabled,
+.create-user-field select:disabled {
+  background: #f9fafb;
+  cursor: not-allowed;
+}
+
+.create-user-field small {
+  display: block;
+  margin-top: 5px;
+  color: #dc2626;
+  font-size: 11px;
+}
+
+.create-user-footer {
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+}
+
+.create-user-cancel,
+.create-user-submit {
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  cursor: pointer;
+}
+
+.create-user-cancel {
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #374151;
+}
+
+.create-user-cancel:hover:not(:disabled) {
+  background: #f9fafb;
+}
+
+.create-user-submit {
+  border: 0;
+  background: #4f46e5;
+  color: #ffffff;
+}
+
+.create-user-submit:hover:not(:disabled) {
+  background: #4338ca;
+}
+
+.create-user-cancel:disabled,
+.create-user-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.create-user-spinner {
+  animation: create-user-spin 0.8s linear infinite;
+}
+
+@keyframes create-user-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 600px) {
+  .create-user-overlay {
+    padding: 12px;
+  }
+
+  .create-user-modal {
+    max-height: calc(100vh - 24px);
+  }
+
+  .create-user-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .create-user-field.full-width {
+    grid-column: auto;
+  }
+}
