@@ -1,0 +1,242 @@
+.create-request-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.48);
+}
+
+.create-request-modal {
+  width: min(720px, 100%);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.2);
+}
+
+.create-request-header {
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #edf0f3;
+}
+
+.create-request-title {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.create-request-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.create-request-title h2 {
+  margin: 0;
+  color: #172033;
+  font-size: 17px;
+}
+
+.create-request-title p {
+  margin: 3px 0 0;
+  color: #8a93a1;
+  font-size: 12px;
+}
+
+.create-request-close {
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.create-request-close:hover {
+  background: #f3f4f6;
+}
+
+.create-request-form {
+  padding: 20px;
+}
+
+.create-request-api-error {
+  padding: 10px 12px;
+  margin-bottom: 15px;
+  border-radius: 7px;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 12px;
+}
+
+.create-request-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.create-request-field {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.create-request-field.full-width {
+  grid-column: 1 / -1;
+}
+
+.create-request-field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.create-request-field label span {
+  color: #dc2626;
+}
+
+.create-request-field input,
+.create-request-field select,
+.create-request-field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #dfe3e8;
+  border-radius: 8px;
+  outline: none;
+  background: #ffffff;
+  color: #172033;
+  font-family: inherit;
+  font-size: 13px;
+  transition: border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.create-request-field input,
+.create-request-field select {
+  height: 40px;
+  padding: 0 11px;
+}
+
+.create-request-field textarea {
+  padding: 10px 11px;
+  resize: vertical;
+}
+
+.create-request-field input:focus,
+.create-request-field select:focus,
+.create-request-field textarea:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+}
+
+.create-request-field input:disabled,
+.create-request-field select:disabled,
+.create-request-field textarea:disabled {
+  background: #f8fafc;
+  cursor: not-allowed;
+}
+
+.create-request-field small {
+  color: #dc2626;
+  font-size: 11px;
+}
+
+.create-request-footer {
+  margin-top: 20px;
+  padding-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  border-top: 1px solid #edf0f3;
+}
+
+.create-request-cancel,
+.create-request-submit {
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.create-request-cancel {
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #374151;
+}
+
+.create-request-submit {
+  border: 0;
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.create-request-submit:hover {
+  background: #1d4ed8;
+}
+
+.create-request-cancel:disabled,
+.create-request-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.create-request-spinner {
+  animation: create-request-spin 1s linear infinite;
+}
+
+@keyframes create-request-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 600px) {
+  .create-request-overlay {
+    padding: 10px;
+  }
+
+  .create-request-modal {
+    max-height: calc(100vh - 20px);
+  }
+
+  .create-request-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .create-request-field.full-width {
+    grid-column: auto;
+  }
+
+  .create-request-footer {
+    flex-direction: column-reverse;
+  }
+
+  .create-request-cancel,
+  .create-request-submit {
+    width: 100%;
+  }
+}

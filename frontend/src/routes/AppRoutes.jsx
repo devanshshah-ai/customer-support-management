@@ -14,6 +14,7 @@ import RoleRoute from "./RoleRoute";
 
 import DashboardPage from "../pages/dashboard/DashboardPage";
 import CustomerListPage from "../pages/customers/CustomerListPage";
+import ServiceRequestsPage from "../pages/requests/ServiceRequestsPage";
 
 const Placeholder = ({ title }) => (
   <div className="p-8">
@@ -28,7 +29,10 @@ const AppRoutes = () => {
     <BrowserRouter>
       <Routes>
 
+        {/* ==================== */}
         {/* Guest Routes */}
+        {/* ==================== */}
+
         <Route element={<GuestRoute />}>
           <Route
             path="/login"
@@ -36,28 +40,42 @@ const AppRoutes = () => {
           />
         </Route>
 
+
+        {/* ==================== */}
         {/* Protected Routes */}
+        {/* ==================== */}
+
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>
+
+            {/* Dashboard */}
 
             <Route
               path="/dashboard"
               element={<DashboardPage />}
             />
 
+
+            {/* Customers */}
+
             <Route
-                path="/customers"
-                element={<CustomerListPage />}
+              path="/customers"
+              element={<CustomerListPage />}
             />
+
+
+            {/* Service Requests */}
 
             <Route
               path="/requests"
-              element={
-                <Placeholder title="Service Requests" />
-              }
+              element={<ServiceRequestsPage />}
             />
 
+
+            {/* ==================== */}
             {/* Admin + Manager */}
+            {/* ==================== */}
+
             <Route
               element={
                 <RoleRoute
@@ -68,6 +86,7 @@ const AppRoutes = () => {
                 />
               }
             >
+
               <Route
                 path="/teams"
                 element={
@@ -81,9 +100,14 @@ const AppRoutes = () => {
                   <Placeholder title="Reports" />
                 }
               />
+
             </Route>
 
-            {/* Admin only */}
+
+            {/* ==================== */}
+            {/* Admin Only */}
+            {/* ==================== */}
+
             <Route
               element={
                 <RoleRoute
@@ -91,18 +115,24 @@ const AppRoutes = () => {
                 />
               }
             >
+
               <Route
                 path="/users"
                 element={
                   <Placeholder title="Users" />
                 }
               />
+
             </Route>
 
           </Route>
         </Route>
 
-        {/* Default */}
+
+        {/* ==================== */}
+        {/* Default Route */}
+        {/* ==================== */}
+
         <Route
           path="/"
           element={
@@ -113,7 +143,11 @@ const AppRoutes = () => {
           }
         />
 
-        {/* Unknown route */}
+
+        {/* ==================== */}
+        {/* Unknown Route */}
+        {/* ==================== */}
+
         <Route
           path="*"
           element={
