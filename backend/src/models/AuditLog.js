@@ -24,6 +24,7 @@ const auditLogSchema = new mongoose.Schema(
         "NOTE_ADDED",
         "READ",
         "OTHER",
+        "SEVERITY_CHANGE",
       ],
       required: true,
       index: true,
