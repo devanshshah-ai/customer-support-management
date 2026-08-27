@@ -1,5 +1,12 @@
-function CustomerListPage() {
-  return <h2>Customer List</h2>;
-}
+import PageContainer from "../../components/layout/PageContainer";
+import CustomerList from "./CustomerList";
+
+const CustomerListPage = () => {
+  return (
+    <PageContainer>
+      <CustomerList />
+    </PageContainer>
+  );
+};
 
 export default CustomerListPage;

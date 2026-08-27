@@ -12,6 +12,9 @@ import GuestRoute from "./GuestRoute";
 import ProtectedRoute from "./ProtectedRoute";
 import RoleRoute from "./RoleRoute";
 
+import DashboardPage from "../pages/dashboard/DashboardPage";
+import CustomerListPage from "../pages/customers/CustomerListPage";
+
 const Placeholder = ({ title }) => (
   <div className="p-8">
     <h1 className="text-2xl font-bold text-gray-900">
@@ -24,6 +27,7 @@ const AppRoutes = () => {
   return (
     <BrowserRouter>
       <Routes>
+
         {/* Guest Routes */}
         <Route element={<GuestRoute />}>
           <Route
@@ -35,18 +39,15 @@ const AppRoutes = () => {
         {/* Protected Routes */}
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>
+
             <Route
               path="/dashboard"
-              element={
-                <Placeholder title="Dashboard" />
-              }
+              element={<DashboardPage />}
             />
 
             <Route
-              path="/customers"
-              element={
-                <Placeholder title="Customers" />
-              }
+                path="/customers"
+                element={<CustomerListPage />}
             />
 
             <Route
@@ -97,6 +98,7 @@ const AppRoutes = () => {
                 }
               />
             </Route>
+
           </Route>
         </Route>
 
@@ -121,6 +123,7 @@ const AppRoutes = () => {
             />
           }
         />
+
       </Routes>
     </BrowserRouter>
   );

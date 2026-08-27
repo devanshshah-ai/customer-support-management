@@ -1,0 +1,541 @@
+/* ========================================
+   VIEW CUSTOMER MODAL
+======================================== */
+
+.view-customer-overlay {
+  position: fixed;
+  inset: 0;
+
+  z-index: 9999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 24px;
+
+  box-sizing: border-box;
+
+  background: rgba(15, 23, 42, 0.58);
+
+  backdrop-filter: blur(5px);
+}
+
+/* ========================================
+   MODAL
+======================================== */
+
+.view-customer-modal {
+  width: min(680px, 100%);
+  max-height: min(760px, calc(100vh - 48px));
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 25px 60px rgba(15, 23, 42, 0.2),
+    0 8px 24px rgba(15, 23, 42, 0.08);
+}
+
+/* ========================================
+   HEADER
+======================================== */
+
+.view-customer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  flex-shrink: 0;
+
+  gap: 16px;
+
+  padding: 22px 26px;
+
+  border-bottom: 1px solid #e2e8f0;
+
+  background: #ffffff;
+}
+
+.view-customer-header-title {
+  display: flex;
+  align-items: center;
+
+  min-width: 0;
+
+  gap: 13px;
+}
+
+.view-customer-header-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  width: 46px;
+  height: 46px;
+
+  border-radius: 50%;
+
+  background: #e0edff;
+  color: #2563eb;
+
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.view-customer-header-text {
+  min-width: 0;
+}
+
+.view-customer-header-text h2 {
+  margin: 0;
+
+  color: #0f172a;
+
+  font-size: 20px;
+  font-weight: 700;
+
+  line-height: 1.3;
+}
+
+.view-customer-header-text p {
+  margin: 4px 0 0;
+
+  color: #64748b;
+
+  font-size: 13px;
+
+  line-height: 1.4;
+}
+
+/* ========================================
+   CLOSE BUTTON
+======================================== */
+
+.view-customer-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  width: 38px;
+  height: 38px;
+
+  padding: 0;
+
+  border: none;
+  border-radius: 8px;
+
+  background: transparent;
+  color: #64748b;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.view-customer-close:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.view-customer-close:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+/* ========================================
+   BODY
+======================================== */
+
+.view-customer-body {
+  flex: 1;
+
+  min-height: 0;
+
+  padding: 26px;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  box-sizing: border-box;
+}
+
+/* ========================================
+   SCROLLBAR
+======================================== */
+
+.view-customer-body::-webkit-scrollbar {
+  width: 7px;
+}
+
+.view-customer-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.view-customer-body::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+
+  background: #cbd5e1;
+}
+
+.view-customer-body::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* ========================================
+   PROFILE
+======================================== */
+
+.view-customer-profile {
+  display: flex;
+  align-items: center;
+
+  gap: 18px;
+
+  margin-bottom: 24px;
+
+  padding: 22px;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+
+  background: #f8fafc;
+
+  box-sizing: border-box;
+}
+
+.view-customer-profile-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  width: 62px;
+  height: 62px;
+
+  border-radius: 50%;
+
+  background: #dbeafe;
+  color: #2563eb;
+
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.view-customer-profile-info {
+  min-width: 0;
+}
+
+.view-customer-profile-info h3 {
+  margin: 0 0 5px;
+
+  color: #0f172a;
+
+  font-size: 18px;
+  font-weight: 700;
+
+  line-height: 1.35;
+
+  overflow-wrap: anywhere;
+}
+
+.view-customer-profile-info p {
+  margin: 0 0 10px;
+
+  color: #64748b;
+
+  font-size: 14px;
+
+  line-height: 1.4;
+
+  overflow-wrap: anywhere;
+}
+
+/* ========================================
+   STATUS
+======================================== */
+
+.view-customer-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: fit-content;
+
+  padding: 5px 10px;
+
+  border-radius: 999px;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  line-height: 1;
+
+  text-transform: capitalize;
+}
+
+.view-customer-status-active {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.view-customer-status-inactive {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.view-customer-status-pending {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+/* ========================================
+   DETAILS GRID
+======================================== */
+
+.view-customer-details-grid {
+  display: grid;
+
+  grid-template-columns: repeat(
+    2,
+    minmax(0, 1fr)
+  );
+
+  gap: 14px;
+}
+
+.view-customer-detail-card {
+  min-width: 0;
+
+  padding: 18px;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+
+  background: #ffffff;
+
+  box-sizing: border-box;
+}
+
+.view-customer-detail-card.full-width {
+  grid-column: 1 / -1;
+}
+
+.view-customer-detail-card > span:first-child {
+  display: block;
+
+  margin-bottom: 7px;
+
+  color: #94a3b8;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  line-height: 1.3;
+
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.view-customer-detail-card > strong {
+  display: block;
+
+  min-width: 0;
+
+  color: #334155;
+
+  font-size: 14px;
+  font-weight: 500;
+
+  line-height: 1.5;
+
+  overflow-wrap: anywhere;
+}
+
+/* ========================================
+   FOOTER
+======================================== */
+
+.view-customer-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  flex-shrink: 0;
+
+  gap: 10px;
+
+  padding: 16px 26px;
+
+  border-top: 1px solid #e2e8f0;
+
+  background: #f8fafc;
+}
+
+.view-customer-cancel-button,
+.view-customer-edit-button {
+  min-height: 40px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  padding: 0 17px;
+
+  border-radius: 8px;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.1s ease;
+}
+
+.view-customer-cancel-button {
+  border: 1px solid #dbe3ed;
+
+  background: #ffffff;
+  color: #334155;
+}
+
+.view-customer-cancel-button:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.view-customer-edit-button {
+  border: 1px solid #2563eb;
+
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.view-customer-edit-button:hover {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+
+  box-shadow:
+    0 4px 12px rgba(37, 99, 235, 0.2);
+}
+
+.view-customer-edit-button:active,
+.view-customer-cancel-button:active {
+  transform: translateY(1px);
+}
+
+.view-customer-cancel-button:focus-visible,
+.view-customer-edit-button:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+/* ========================================
+   RESPONSIVE
+======================================== */
+
+@media (max-width: 700px) {
+  .view-customer-overlay {
+    padding: 14px;
+  }
+
+  .view-customer-modal {
+    max-height: calc(100vh - 28px);
+
+    border-radius: 14px;
+  }
+
+  .view-customer-header {
+    padding: 18px;
+  }
+
+  .view-customer-body {
+    padding: 18px;
+  }
+
+  .view-customer-footer {
+    padding: 14px 18px;
+  }
+
+  .view-customer-details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .view-customer-detail-card.full-width {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .view-customer-overlay {
+    padding: 0;
+  }
+
+  .view-customer-modal {
+    width: 100%;
+    height: 100%;
+    max-height: 100vh;
+
+    border-radius: 0;
+  }
+
+  .view-customer-header {
+    padding: 16px;
+  }
+
+  .view-customer-header-text h2 {
+    font-size: 18px;
+  }
+
+  .view-customer-body {
+    padding: 16px;
+  }
+
+  .view-customer-profile {
+    align-items: flex-start;
+
+    padding: 17px;
+
+    gap: 13px;
+  }
+
+  .view-customer-profile-avatar {
+    width: 50px;
+    height: 50px;
+
+    font-size: 15px;
+  }
+
+  .view-customer-profile-info h3 {
+    font-size: 16px;
+  }
+
+  .view-customer-footer {
+    flex-direction: column-reverse;
+  }
+
+  .view-customer-cancel-button,
+  .view-customer-edit-button {
+    width: 100%;
+  }
+}

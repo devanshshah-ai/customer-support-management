@@ -40,10 +40,7 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.error = null;
 
-      localStorage.removeItem(
-        "accessToken"
-      );
-
+      localStorage.removeItem("accessToken");
       localStorage.removeItem("user");
     },
 
@@ -53,58 +50,63 @@ const authSlice = createSlice({
   },
 
   extraReducers: (builder) => {
-    // Login
+    /*
+     * LOGIN
+     */
     builder
-      .addCase(
-        loginUser.pending,
-        (state) => {
-          state.loading = true;
-          state.error = null;
-        }
-      )
+      .addCase(loginUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
 
-      .addCase(
-        loginUser.fulfilled,
-        (state, action) => {
-          state.loading = false;
+      .addCase(loginUser.fulfilled, (state, action) => {
+        state.loading = false;
 
-          const data = action.payload.data;
+        const data = action.payload.data;
 
-          state.user = data.user;
-          state.accessToken = data.accessToken;
-          state.isAuthenticated = true;
+        /*
+         * Backend returns:
+         *
+         * data.token
+         * data.user
+         *
+         * Keep accessToken as the frontend
+         * state/localStorage name.
+         */
+        const token = data.token;
 
+        state.user = data.user;
+        state.accessToken = token;
+        state.isAuthenticated = Boolean(token);
+        state.initialized = true;
+
+        if (token) {
           localStorage.setItem(
             "accessToken",
-            data.accessToken
-          );
-
-          localStorage.setItem(
-            "user",
-            JSON.stringify(data.user)
+            token
           );
         }
-      )
 
-      .addCase(
-        loginUser.rejected,
-        (state, action) => {
-          state.loading = false;
-          state.error =
-            action.payload ||
-            "Login failed";
-        }
-      );
+        localStorage.setItem(
+          "user",
+          JSON.stringify(data.user)
+        );
+      })
 
-    // Register
+      .addCase(loginUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error =
+          action.payload || "Login failed";
+      });
+
+    /*
+     * REGISTER
+     */
     builder
-      .addCase(
-        registerUser.pending,
-        (state) => {
-          state.loading = true;
-          state.error = null;
-        }
-      )
+      .addCase(registerUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
 
       .addCase(
         registerUser.fulfilled,
@@ -113,15 +115,22 @@ const authSlice = createSlice({
 
           const data = action.payload.data;
 
-          if (data?.accessToken) {
+          /*
+           * Support the same backend token
+           * structure used by login.
+           */
+          const token =
+            data?.token || data?.accessToken;
+
+          if (token) {
             state.user = data.user;
-            state.accessToken =
-              data.accessToken;
+            state.accessToken = token;
             state.isAuthenticated = true;
+            state.initialized = true;
 
             localStorage.setItem(
               "accessToken",
-              data.accessToken
+              token
             );
 
             localStorage.setItem(
@@ -142,12 +151,15 @@ const authSlice = createSlice({
         }
       );
 
-    // Current user
+    /*
+     * FETCH CURRENT USER
+     */
     builder
       .addCase(
         fetchCurrentUser.pending,
         (state) => {
           state.loading = true;
+          state.error = null;
         }
       )
 

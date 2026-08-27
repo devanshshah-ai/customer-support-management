@@ -10,6 +10,9 @@ const api = axios.create({
   },
 });
 
+/*
+ * Attach JWT token to every authenticated request.
+ */
 api.interceptors.request.use(
   (config) => {
     const token =
@@ -22,23 +25,36 @@ api.interceptors.request.use(
 
     return config;
   },
-
-  (error) =>
-    Promise.reject(error)
+  (error) => {
+    return Promise.reject(error);
+  }
 );
 
+/*
+ * Handle API responses.
+ */
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    return response;
+  },
 
   (error) => {
-    if (
-      error.response?.status === 401
-    ) {
-      localStorage.removeItem(
-        "accessToken"
+    /*
+     * Do NOT immediately remove the token here.
+     *
+     * A 401 can happen for an individual request
+     * and should not automatically destroy the
+     * entire frontend authentication state.
+     *
+     * Authentication cleanup is handled by the
+     * Redux auth flow.
+     */
+    if (error.response?.status === 401) {
+      console.warn(
+        "API returned 401:",
+        error.response?.data?.message ||
+          "Unauthorized"
       );
-
-      localStorage.removeItem("user");
     }
 
     return Promise.reject(error);
