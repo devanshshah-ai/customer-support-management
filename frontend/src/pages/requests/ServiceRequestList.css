@@ -503,3 +503,57 @@
     justify-content: space-between;
   }
 }
+
+.service-request-date-filter {
+  min-width: 150px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 9px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #ffffff;
+  box-sizing: border-box;
+}
+
+.service-request-date-filter span {
+  color: #9ca3af;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.service-request-date-filter input {
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #374151;
+  font-size: 12px;
+}
+
+.service-request-date-filter:focus-within {
+  border-color: #2563eb;
+}
+
+
+.sla-within {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.sla-approaching {
+  background: #fef3c7;
+  color: #a16207;
+}
+
+.sla-breached {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.sla-resolved {
+  background: #dcfce7;
+  color: #15803d;
+}

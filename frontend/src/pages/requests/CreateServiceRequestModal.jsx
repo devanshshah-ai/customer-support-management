@@ -3,9 +3,11 @@ import {
   X,
   Plus,
   Loader2,
+  Sparkles,
 } from "lucide-react";
 
 import api from "../../services/api";
+import aiService from "../../features/ai/aiService";
 
 import "./CreateServiceRequestModal.css";
 
@@ -31,6 +33,9 @@ const CreateServiceRequestModal = ({
   const [errors, setErrors] = useState({});
   const [apiError, setApiError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState("");
+  const [aiRecommendation, setAiRecommendation] = useState(null);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -46,6 +51,52 @@ const CreateServiceRequestModal = ({
     }));
 
     setApiError("");
+
+    if (name === "subject" || name === "description") {
+      setAiRecommendation(null);
+      setAiError("");
+    }
+  };
+
+  const handleAnalyzeIssue = async () => {
+    const subject = formData.subject.trim();
+    const description = formData.description.trim();
+
+    if (subject.length < 3 || description.length < 5) {
+      setAiError(
+        "Enter a subject and description before requesting an AI recommendation."
+      );
+      return;
+    }
+
+    try {
+      setAiLoading(true);
+      setAiError("");
+
+      const response = await aiService.analyzeIssue({
+        subject,
+        description,
+      });
+      setAiRecommendation(response?.data?.recommendation || null);
+    } catch (error) {
+      console.error("Failed to analyze request:", error);
+      setAiError(
+        error.response?.data?.message ||
+          "Failed to generate AI recommendation."
+      );
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const handleApplyRecommendation = () => {
+    if (!aiRecommendation) return;
+
+    setFormData((current) => ({
+      ...current,
+      category: aiRecommendation.category || current.category,
+      severity: aiRecommendation.severity || current.severity,
+    }));
   };
 
   const validate = () => {
@@ -292,6 +343,54 @@ const CreateServiceRequestModal = ({
                 <small>
                   {errors.description}
                 </small>
+              )}
+            </div>
+
+            <div className="create-request-ai-analysis full-width">
+              <div className="create-request-ai-analysis-heading">
+                <div>
+                  <Sparkles size={16} />
+                  <div>
+                    <strong>AI Issue Analysis</strong>
+                    <span>Recommend category and severity from the issue description.</span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleAnalyzeIssue}
+                  disabled={aiLoading || loading}
+                >
+                  {aiLoading ? (
+                    <Loader2 size={14} className="create-request-spinner" />
+                  ) : (
+                    <Sparkles size={14} />
+                  )}
+                  {aiRecommendation ? "Analyze Again" : "Analyze Issue"}
+                </button>
+              </div>
+
+              {aiError && (
+                <div className="create-request-ai-error">{aiError}</div>
+              )}
+
+              {aiRecommendation && (
+                <div className="create-request-ai-result">
+                  <div>
+                    <span>Suggested Category</span>
+                    <strong>{aiRecommendation.category}</strong>
+                  </div>
+                  <div>
+                    <span>Suggested Severity</span>
+                    <strong>{aiRecommendation.severity}</strong>
+                  </div>
+                  <p>{aiRecommendation.reason}</p>
+                  <button
+                    type="button"
+                    onClick={handleApplyRecommendation}
+                  >
+                    Apply Recommendation
+                  </button>
+                </div>
               )}
             </div>
 

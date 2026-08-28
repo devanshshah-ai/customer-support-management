@@ -21,6 +21,8 @@ const ServiceRequestList = ({
   onEdit,
   refreshKey,
   currentUserRole,
+  teams = [],
+  agents = [],
 }) => {
   const [requests, setRequests] = useState([]);
 
@@ -32,6 +34,12 @@ const ServiceRequestList = ({
   const [status, setStatus] = useState("");
   const [severity, setSeverity] = useState("");
   const [category, setCategory] = useState("");
+  const [assignedTeam, setAssignedTeam] = useState("");
+  const [assignedAgent, setAssignedAgent] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [sortBy, setSortBy] = useState("createdAt");
+  const [sortOrder, setSortOrder] = useState("desc");
 
   const [page, setPage] = useState(1);
 
@@ -60,8 +68,12 @@ const ServiceRequestList = ({
           status: status || undefined,
           severity: severity || undefined,
           category: category || undefined,
-          sortBy: "createdAt",
-          sortOrder: "desc",
+          assignedTeam: assignedTeam || undefined,
+          assignedAgent: assignedAgent || undefined,
+          startDate: startDate || undefined,
+          endDate: endDate || undefined,
+          sortBy,
+          sortOrder,
         },
       });
 
@@ -91,7 +103,20 @@ const ServiceRequestList = ({
     } finally {
       setLoading(false);
     }
-  }, [page, debouncedSearch, status, severity, category, refreshKey]);
+  }, [
+    page,
+    debouncedSearch,
+    status,
+    severity,
+    category,
+    assignedTeam,
+    assignedAgent,
+    startDate,
+    endDate,
+    sortBy,
+    sortOrder,
+    refreshKey,
+  ]);
 
   /*
    * Initial load + reload whenever
@@ -217,6 +242,31 @@ const ServiceRequestList = ({
     }
   };
 
+  const getSlaClass = (value) => {
+    switch (value) {
+      case "BREACHED":
+      case "RESOLVED_AFTER_SLA":
+        return "sla-breached";
+      case "APPROACHING":
+        return "sla-approaching";
+      case "RESOLVED_WITHIN_SLA":
+        return "sla-resolved";
+      default:
+        return "sla-within";
+    }
+  };
+
+  const formatSlaStatus = (value) => {
+    const labels = {
+      WITHIN_SLA: "Within SLA",
+      APPROACHING: "Approaching",
+      BREACHED: "Breached",
+      RESOLVED_WITHIN_SLA: "Resolved in SLA",
+      RESOLVED_AFTER_SLA: "Resolved late",
+    };
+    return labels[value] || "—";
+  };
+
   /*
    * Reset filters
    */
@@ -225,6 +275,12 @@ const ServiceRequestList = ({
     setStatus("");
     setSeverity("");
     setCategory("");
+    setAssignedTeam("");
+    setAssignedAgent("");
+    setStartDate("");
+    setEndDate("");
+    setSortBy("createdAt");
+    setSortOrder("desc");
     setPage(1);
   };
 
@@ -326,6 +382,101 @@ const ServiceRequestList = ({
           <option value="Complaint">Complaint</option>
         </select>
 
+        {(currentUserRole === "admin" ||
+          currentUserRole === "manager") && (
+          <>
+            <select
+              value={assignedTeam}
+              onChange={(event) => {
+                setAssignedTeam(event.target.value);
+                setPage(1);
+              }}
+            >
+              <option value="">All Teams</option>
+              {teams.map((team) => (
+                <option
+                  key={team.id || team._id}
+                  value={team.id || team._id}
+                >
+                  {team.name}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={assignedAgent}
+              onChange={(event) => {
+                setAssignedAgent(event.target.value);
+                setPage(1);
+              }}
+            >
+              <option value="">All Agents</option>
+              {agents.map((agent) => (
+                <option
+                  key={agent.id || agent._id}
+                  value={agent.id || agent._id}
+                >
+                  {agent.name}
+                </option>
+              ))}
+            </select>
+          </>
+        )}
+
+        <label className="service-request-date-filter">
+          <span>From</span>
+          <input
+            type="date"
+            value={startDate}
+            max={endDate || undefined}
+            onChange={(event) => {
+              setStartDate(event.target.value);
+              setPage(1);
+            }}
+          />
+        </label>
+
+        <label className="service-request-date-filter">
+          <span>To</span>
+          <input
+            type="date"
+            value={endDate}
+            min={startDate || undefined}
+            onChange={(event) => {
+              setEndDate(event.target.value);
+              setPage(1);
+            }}
+          />
+        </label>
+
+        <select
+          value={sortBy}
+          onChange={(event) => {
+            setSortBy(event.target.value);
+            setPage(1);
+          }}
+          title="Sort field"
+        >
+          <option value="createdAt">Sort: Created</option>
+          <option value="updatedAt">Sort: Updated</option>
+          <option value="slaDeadline">Sort: SLA Deadline</option>
+          <option value="severity">Sort: Severity</option>
+          <option value="status">Sort: Status</option>
+          <option value="subject">Sort: Subject</option>
+        </select>
+
+        <select
+          value={sortOrder}
+          onChange={(event) => {
+            setSortOrder(event.target.value);
+            setPage(1);
+          }}
+          title="Sort direction"
+        >
+          <option value="desc">Descending</option>
+          <option value="asc">Ascending</option>
+        </select>
+
         <button
           type="button"
           className="service-request-refresh-btn"
@@ -346,7 +497,13 @@ const ServiceRequestList = ({
         {(search ||
           status ||
           severity ||
-          category) && (
+          category ||
+          assignedTeam ||
+          assignedAgent ||
+          startDate ||
+          endDate ||
+          sortBy !== "createdAt" ||
+          sortOrder !== "desc") && (
           <button
             type="button"
             className="service-request-reset-btn"
@@ -384,6 +541,7 @@ const ServiceRequestList = ({
                 <th>Severity</th>
                 <th>Assigned Agent</th>
                 <th>Status</th>
+                <th>SLA</th>
                 <th>Created</th>
                 <th>Actions</th>
               </tr>
@@ -393,7 +551,7 @@ const ServiceRequestList = ({
               {loading ? (
                 <tr>
                   <td
-                    colSpan="9"
+                    colSpan="10"
                     className="service-request-loading"
                   >
                     Loading service requests...
@@ -402,7 +560,7 @@ const ServiceRequestList = ({
               ) : requests.length === 0 ? (
                 <tr>
                   <td
-                    colSpan="9"
+                    colSpan="10"
                     className="service-request-empty"
                   >
                     <ClipboardList size={30} />
@@ -471,6 +629,16 @@ const ServiceRequestList = ({
                         )}`}
                       >
                         {request.status || "-"}
+                      </span>
+                    </td>
+
+                    <td>
+                      <span
+                        className={`request-badge ${getSlaClass(
+                          request.slaStatus
+                        )}`}
+                      >
+                        {formatSlaStatus(request.slaStatus)}
                       </span>
                     </td>
 

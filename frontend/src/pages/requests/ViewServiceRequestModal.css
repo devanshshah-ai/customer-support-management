@@ -554,3 +554,220 @@
   opacity: 0.55;
   cursor: not-allowed;
 }
+
+
+.view-request-sla-status.within {
+  background: #ecfdf5;
+}
+.view-request-sla-status.within strong,
+.view-request-sla-status.within svg {
+  color: #047857;
+}
+.view-request-sla-status.approaching {
+  background: #fffbeb;
+}
+.view-request-sla-status.approaching strong,
+.view-request-sla-status.approaching svg {
+  color: #a16207;
+}
+.view-request-sla-status.breached {
+  background: #fef2f2;
+}
+.view-request-sla-status.breached strong,
+.view-request-sla-status.breached svg {
+  color: #b91c1c;
+}
+.view-request-sla-status.resolved {
+  background: #f0fdf4;
+}
+.view-request-sla-status.resolved strong,
+.view-request-sla-status.resolved svg {
+  color: #15803d;
+}
+
+
+.view-request-ai-section {
+  border-radius: 10px;
+}
+
+.view-request-ai-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.view-request-ai-heading > div {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.view-request-ai-heading > div > svg {
+  margin-top: 1px;
+  color: #7c3aed;
+}
+
+.view-request-ai-heading h3 {
+  margin-bottom: 3px;
+}
+
+.view-request-ai-heading p {
+  margin: 0;
+  color: #8a93a1;
+  font-size: 11px;
+}
+
+.view-request-ai-heading > button {
+  min-height: 34px;
+  padding: 0 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  border: 1px solid #c4b5fd;
+  border-radius: 8px;
+  background: #f5f3ff;
+  color: #6d28d9;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.view-request-ai-heading > button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.view-request-ai-summary {
+  margin-top: 13px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+}
+
+.view-request-ai-summary > div {
+  padding: 11px;
+  border: 1px solid #ede9fe;
+  border-radius: 8px;
+  background: #faf8ff;
+}
+
+.view-request-ai-summary > div.full {
+  grid-column: 1 / -1;
+}
+
+.view-request-ai-summary span {
+  display: block;
+  margin-bottom: 5px;
+  color: #7c3aed;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.view-request-ai-summary p,
+.view-request-ai-summary li {
+  color: #4b5563;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.view-request-ai-summary p {
+  margin: 0;
+}
+
+.view-request-ai-summary ul {
+  margin: 0;
+  padding-left: 16px;
+}
+
+.view-request-ai-error {
+  margin-top: 10px;
+  padding: 9px 10px;
+  border-radius: 7px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 11px;
+}
+
+@media (max-width: 600px) {
+  .view-request-ai-heading {
+    flex-direction: column;
+  }
+
+  .view-request-ai-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .view-request-ai-summary > div.full {
+    grid-column: auto;
+  }
+}
+
+
+.view-request-ai-response-tool {
+  margin-bottom: 10px;
+  padding: 10px;
+  border: 1px solid #ede9fe;
+  border-radius: 8px;
+  background: #faf8ff;
+}
+
+.view-request-ai-response-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.view-request-ai-response-actions > div {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #6d28d9;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.view-request-ai-response-actions > button,
+.view-request-ai-response-editor > div button {
+  min-height: 30px;
+  padding: 0 9px;
+  border: 1px solid #c4b5fd;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #6d28d9;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.view-request-ai-response-actions > button:disabled,
+.view-request-ai-response-editor > div button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.view-request-ai-response-editor {
+  margin-top: 9px;
+}
+
+.view-request-ai-response-editor textarea {
+  background: #ffffff;
+  border-color: #c4b5fd;
+}
+
+.view-request-ai-response-editor > div {
+  margin-top: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.view-request-ai-response-editor > div span {
+  color: #7c718f;
+  font-size: 10px;
+}

@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
+import api from "../../services/api";
+import { useAppDispatch } from "../../app/hooks";
+import { setCurrentUser } from "../../features/auth/authSlice";
 import "./ProfilePage.css";
 
 const ProfilePage = () => {
+  const dispatch = useAppDispatch();
   const [user, setUser] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
@@ -19,32 +23,35 @@ const ProfilePage = () => {
 
   const [passwordError, setPasswordError] = useState("");
   const [passwordSuccess, setPasswordSuccess] = useState("");
+  const [profileError, setProfileError] = useState("");
+  const [profileSuccess, setProfileSuccess] = useState("");
+  const [profileSaving, setProfileSaving] = useState(false);
 
   useEffect(() => {
-    loadUser();
-  }, []);
+    const loadUser = async () => {
+      try {
+        const response = await api.get("/profile");
+        const profile = response.data?.data?.user;
 
-  const loadUser = () => {
-    try {
-      const storedUser = localStorage.getItem("user");
-
-      if (storedUser) {
-        const parsedUser = JSON.parse(storedUser);
-
-        setUser(parsedUser);
-
-        setFormData({
-          name: parsedUser.name || "",
-          email: parsedUser.email || "",
-        });
+        if (profile) {
+          setUser(profile);
+          setFormData({
+            name: profile.name || "",
+            email: profile.email || "",
+          });
+          dispatch(setCurrentUser(profile));
+        }
+      } catch (error) {
+        console.error("Failed to load profile:", error);
+        setProfileError(
+          error.response?.data?.message ||
+            "Failed to load profile information."
+        );
       }
-    } catch (error) {
-      console.error(
-        "Failed to load profile:",
-        error
-      );
-    }
-  };
+    };
+
+    loadUser();
+  }, [dispatch]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -67,25 +74,39 @@ const ProfilePage = () => {
     setPasswordSuccess("");
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.name.trim()) {
-      alert("Name is required");
+      setProfileError("Name is required.");
       return;
     }
 
-    const updatedUser = {
-      ...user,
-      name: formData.name.trim(),
-      email: formData.email.trim(),
-    };
+    try {
+      setProfileSaving(true);
+      setProfileError("");
+      setProfileSuccess("");
 
-    localStorage.setItem(
-      "user",
-      JSON.stringify(updatedUser)
-    );
+      const response = await api.put("/profile", {
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+      });
 
-    setUser(updatedUser);
-    setIsEditing(false);
+      const updatedUser = response.data?.data?.user;
+      if (updatedUser) {
+        setUser(updatedUser);
+        dispatch(setCurrentUser(updatedUser));
+      }
+
+      setIsEditing(false);
+      setProfileSuccess("Profile updated successfully.");
+    } catch (error) {
+      console.error("Failed to update profile:", error);
+      setProfileError(
+        error.response?.data?.message ||
+          "Failed to update profile."
+      );
+    } finally {
+      setProfileSaving(false);
+    }
   };
 
   const handleCancel = () => {
@@ -155,68 +176,21 @@ const ProfilePage = () => {
   }
 
   try {
-    const token = localStorage.getItem("accessToken");
+    await api.put("/profile/password", {
+      currentPassword: passwordData.currentPassword,
+      newPassword: passwordData.newPassword,
+    });
 
-    if (!token) {
-      setPasswordError(
-        "Your session has expired. Please login again."
-      );
-      return;
-    }
-
-    if (!user?.id) {
-      setPasswordError(
-        "Unable to identify your account."
-      );
-      return;
-    }
-
-    const response = await fetch(
-      `${import.meta.env.VITE_API_URL || "http://localhost:5000/api"}/users/${user.id}`,
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          password: passwordData.newPassword,
-        }),
-      }
-    );
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      throw new Error(
-        result?.message ||
-          "Failed to update password."
-      );
-    }
-
-    setPasswordSuccess(
-      "Password updated successfully."
-    );
-
+    setPasswordSuccess("Password updated successfully.");
     setPasswordData({
       currentPassword: "",
       newPassword: "",
       confirmPassword: "",
     });
-
-    setTimeout(() => {
-      setShowPasswordForm(false);
-      setPasswordSuccess("");
-    }, 1200);
-
   } catch (error) {
-    console.error(
-      "Change password error:",
-      error
-    );
-
+    console.error("Change password error:", error);
     setPasswordError(
-      error.message ||
+      error.response?.data?.message ||
         "Failed to update password. Please try again."
     );
   }
@@ -296,6 +270,14 @@ const ProfilePage = () => {
         )}
       </div>
 
+
+      {profileError && (
+        <div className="profile-message error">{profileError}</div>
+      )}
+
+      {profileSuccess && (
+        <div className="profile-message success">{profileSuccess}</div>
+      )}
 
       {/* Profile Grid */}
 
@@ -402,8 +384,9 @@ const ProfilePage = () => {
                   type="button"
                   className="profile-save-button"
                   onClick={handleSave}
+                  disabled={profileSaving}
                 >
-                  Save Changes
+                  {profileSaving ? "Saving..." : "Save Changes"}
                 </button>
 
               </div>

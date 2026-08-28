@@ -119,6 +119,8 @@ const ServiceRequestsPage = () => {
       <ServiceRequestList
         refreshKey={refreshKey}
         currentUserRole={currentUserRole}
+        teams={teams}
+        agents={agents}
         onCreate={() => setShowCreate(true)}
         onView={handleView}
         onEdit={handleEdit}

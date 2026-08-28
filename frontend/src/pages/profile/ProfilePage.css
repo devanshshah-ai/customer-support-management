@@ -559,3 +559,26 @@
     width: 100%;
   }
 }
+.profile-message {
+  margin-bottom: 16px;
+  padding: 11px 13px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.profile-message.error {
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.profile-message.success {
+  border: 1px solid #bbf7d0;
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.profile-save-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

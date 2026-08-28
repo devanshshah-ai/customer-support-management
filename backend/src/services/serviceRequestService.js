@@ -1,9 +1,17 @@
 const mongoose = require("mongoose");
 
 const ServiceRequest = require("../models/ServiceRequest");
+const Counter = require("../models/Counter");
 const Customer = require("../models/Customer");
 const User = require("../models/User");
 const Team = require("../models/Team");
+const { ROLES } = require("../constants/auth");
+
+const {
+  getRequestScope,
+  assertRequestAccess,
+  assertAgentUpdateFields,
+} = require("./requestAccessService");
 
 const {
   createNotification,
@@ -15,36 +23,113 @@ const {
 
 const {
   calculateSlaDeadline,
+  getSlaStatus,
 } = require("./slaService");
 
+const attachSlaStatus = (request) => {
+  if (!request) return request;
+
+  const plainRequest = request.toObject
+    ? request.toObject()
+    : request;
+
+  return {
+    ...plainRequest,
+    slaStatus: getSlaStatus(
+      plainRequest.slaDeadline,
+      plainRequest.status,
+      plainRequest.createdAt,
+      plainRequest.resolutionDate
+    ),
+  };
+};
+
 /*
- * Generate unique request number
+ * Generate a concurrency-safe unique request number.
+ *
+ * A dedicated MongoDB counter avoids duplicate request numbers that can occur
+ * when multiple requests are created close together or when createdAt order
+ * does not match the highest request number.
  */
-const generateRequestNumber = async () => {
-  const lastRequest = await ServiceRequest.findOne()
-    .sort({ createdAt: -1 })
-    .select("requestNumber");
+const initializeRequestCounter = async () => {
+  const existingCounter = await Counter.findById("serviceRequest");
 
-  let nextNumber = 1001;
-
-  if (lastRequest?.requestNumber) {
-    const lastNumber = parseInt(
-      lastRequest.requestNumber.replace("SR-", ""),
-      10
-    );
-
-    if (!Number.isNaN(lastNumber)) {
-      nextNumber = lastNumber + 1;
-    }
+  if (existingCounter) {
+    return;
   }
 
-  return `SR-${nextNumber}`;
+  const [highestRequest] = await ServiceRequest.aggregate([
+    {
+      $match: {
+        requestNumber: /^SR-\d+$/,
+      },
+    },
+    {
+      $project: {
+        sequence: {
+          $toInt: {
+            $substrBytes: [
+              "$requestNumber",
+              3,
+              {
+                $subtract: [
+                  { $strLenBytes: "$requestNumber" },
+                  3,
+                ],
+              },
+            ],
+          },
+        },
+      },
+    },
+    { $sort: { sequence: -1 } },
+    { $limit: 1 },
+  ]);
+
+  const startingSequence = Math.max(
+    Number(highestRequest?.sequence) || 1000,
+    1000
+  );
+
+  try {
+    await Counter.create({
+      _id: "serviceRequest",
+      sequence: startingSequence,
+    });
+  } catch (error) {
+    // Another request may have initialized the counter at the same time.
+    if (error?.code !== 11000) {
+      throw error;
+    }
+  }
+};
+
+const generateRequestNumber = async () => {
+  await initializeRequestCounter();
+
+  const counter = await Counter.findOneAndUpdate(
+    { _id: "serviceRequest" },
+    { $inc: { sequence: 1 } },
+    { new: true }
+  );
+
+  return `SR-${counter.sequence}`;
 };
 
 /*
  * Create Service Request
  */
-const createServiceRequest = async (data, createdBy = null) => {
+const createServiceRequest = async (data, actor = null) => {
+  const createdBy = actor?.userId || null;
+
+  // Agents create requests for themselves; assignment is a manager/admin action.
+  if (actor?.role === ROLES.AGENT) {
+    data = {
+      ...data,
+      assignedAgent: actor.userId,
+      assignedTeam: null,
+    };
+  }
   const customer = await Customer.findById(data.customer);
 
   if (!customer) {
@@ -146,10 +231,12 @@ const createServiceRequest = async (data, createdBy = null) => {
     });
   }
 
-  return ServiceRequest.findById(request._id)
+  const populatedRequest = await ServiceRequest.findById(request._id)
     .populate("customer")
     .populate("assignedTeam")
     .populate("assignedAgent", "-password");
+
+  return attachSlaStatus(populatedRequest);
 };
 
 /*
@@ -168,7 +255,7 @@ const getServiceRequests = async ({
   endDate,
   sortBy = "createdAt",
   sortOrder = "desc",
-}) => {
+}, actor = null) => {
   const pageNumber = Math.max(Number(page) || 1, 1);
 
   const pageLimit = Math.min(
@@ -178,7 +265,7 @@ const getServiceRequests = async ({
 
   const skip = (pageNumber - 1) * pageLimit;
 
-  const filter = {};
+  const filter = { ...getRequestScope(actor) };
 
   /*
    * Search by:
@@ -244,7 +331,7 @@ const getServiceRequests = async ({
     filter.assignedTeam = assignedTeam;
   }
 
-  if (assignedAgent) {
+  if (assignedAgent && actor?.role !== ROLES.AGENT) {
     filter.assignedAgent = assignedAgent;
   }
 
@@ -328,7 +415,7 @@ const getServiceRequests = async ({
   );
 
   return {
-    requests,
+    requests: requests.map(attachSlaStatus),
 
     pagination: {
       total,
@@ -348,7 +435,7 @@ const getServiceRequests = async ({
 /*
  * Get Service Request By ID
  */
-const getServiceRequestById = async (id) => {
+const getServiceRequestById = async (id, actor = null) => {
   if (!mongoose.Types.ObjectId.isValid(id)) {
     const error = new Error(
       "Invalid service request ID"
@@ -375,7 +462,9 @@ const getServiceRequestById = async (id) => {
     throw error;
   }
 
-  return request;
+  assertRequestAccess(request, actor);
+
+  return attachSlaStatus(request);
 };
 
 /*
@@ -394,8 +483,9 @@ const getServiceRequestById = async (id) => {
 const updateServiceRequest = async (
   id,
   data,
-  updatedBy = null
+  actor = null
 ) => {
+  const updatedBy = actor?.userId || null;
   if (!mongoose.Types.ObjectId.isValid(id)) {
     const error = new Error(
       "Invalid service request ID"
@@ -416,6 +506,9 @@ const updateServiceRequest = async (
     error.statusCode = 404;
     throw error;
   }
+
+  assertRequestAccess(request, actor);
+  assertAgentUpdateFields(data, actor);
 
   /*
    * Capture previous values BEFORE
@@ -691,15 +784,14 @@ const updateServiceRequest = async (
   /*
    * Return updated request
    */
-  return ServiceRequest.findById(
+  const updatedRequest = await ServiceRequest.findById(
     request._id
   )
     .populate("customer")
     .populate("assignedTeam")
-    .populate(
-      "assignedAgent",
-      "-password"
-    );
+    .populate("assignedAgent", "-password");
+
+  return attachSlaStatus(updatedRequest);
 };
 
 /*

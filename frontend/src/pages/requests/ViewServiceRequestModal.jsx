@@ -11,9 +11,11 @@ import {
   Send,
   LockKeyhole,
   Globe2,
+  Sparkles,
 } from "lucide-react";
 
 import api from "../../services/api";
+import aiService from "../../features/ai/aiService";
 
 import "./ViewServiceRequestModal.css";
 
@@ -32,6 +34,12 @@ const ViewServiceRequestModal = ({
   const [messageText, setMessageText] = useState("");
   const [messageSaving, setMessageSaving] = useState(false);
   const [messageError, setMessageError] = useState("");
+  const [aiSummary, setAiSummary] = useState(null);
+  const [aiSummaryLoading, setAiSummaryLoading] = useState(false);
+  const [aiSummaryError, setAiSummaryError] = useState("");
+  const [aiResponse, setAiResponse] = useState("");
+  const [aiResponseLoading, setAiResponseLoading] = useState(false);
+  const [aiResponseError, setAiResponseError] = useState("");
 
   const requestId =
     request?._id || request?.id;
@@ -113,6 +121,53 @@ const ViewServiceRequestModal = ({
     }
   };
 
+  const handleGenerateSummary = async () => {
+    if (!requestId) return;
+
+    try {
+      setAiSummaryLoading(true);
+      setAiSummaryError("");
+
+      const response = await aiService.generateSummary(requestId);
+      setAiSummary(response?.data?.summary || null);
+    } catch (err) {
+      console.error("Failed to generate AI summary:", err);
+      setAiSummaryError(
+        err.response?.data?.message ||
+          "Failed to generate AI summary."
+      );
+    } finally {
+      setAiSummaryLoading(false);
+    }
+  };
+
+  const handleSuggestResponse = async () => {
+    if (!requestId) return;
+
+    try {
+      setAiResponseLoading(true);
+      setAiResponseError("");
+
+      const response = await aiService.suggestResponse(requestId);
+      setAiResponse(response?.data?.suggestion || "");
+    } catch (err) {
+      console.error("Failed to generate AI response:", err);
+      setAiResponseError(
+        err.response?.data?.message ||
+          "Failed to generate AI response suggestion."
+      );
+    } finally {
+      setAiResponseLoading(false);
+    }
+  };
+
+  const handleUseAiResponse = () => {
+    if (!aiResponse.trim()) return;
+    setMessageType("customer");
+    setMessageText(aiResponse.trim());
+    setMessageError("");
+  };
+
   const formatDateTime = (value) => {
     if (!value) {
       return "-";
@@ -161,6 +216,21 @@ const ViewServiceRequestModal = ({
         return "";
     }
   };
+
+  const getSlaPresentation = (value) => {
+    const values = {
+      WITHIN_SLA: ["Within SLA", "within"],
+      APPROACHING: ["SLA Approaching", "approaching"],
+      BREACHED: ["SLA Breached", "breached"],
+      RESOLVED_WITHIN_SLA: ["Resolved Within SLA", "resolved"],
+      RESOLVED_AFTER_SLA: ["Resolved After SLA", "breached"],
+    };
+    return values[value] || ["Unknown", "within"];
+  };
+
+  const [slaLabel, slaTone] = getSlaPresentation(
+    requestData?.slaStatus
+  );
 
   return (
     <div
@@ -369,6 +439,82 @@ const ViewServiceRequestModal = ({
               </div>
             </section>
 
+            <section className="view-request-section view-request-ai-section">
+              <div className="view-request-ai-heading">
+                <div>
+                  <Sparkles size={18} />
+                  <div>
+                    <h3>AI Case Summary</h3>
+                    <p>Generate a concise summary from the request and conversation history.</p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleGenerateSummary}
+                  disabled={aiSummaryLoading}
+                >
+                  {aiSummaryLoading ? (
+                    <Loader2 size={14} className="view-request-spinner" />
+                  ) : (
+                    <Sparkles size={14} />
+                  )}
+                  {aiSummary ? "Regenerate" : "Generate Summary"}
+                </button>
+              </div>
+
+              {aiSummaryError && (
+                <div className="view-request-ai-error">
+                  {aiSummaryError}
+                </div>
+              )}
+
+              {aiSummary && (
+                <div className="view-request-ai-summary">
+                  <div className="full">
+                    <span>Customer Problem</span>
+                    <p>{aiSummary.customerProblem}</p>
+                  </div>
+
+                  <div>
+                    <span>Important Details</span>
+                    {aiSummary.importantDetails?.length ? (
+                      <ul>
+                        {aiSummary.importantDetails.map((item, index) => (
+                          <li key={`${item}-${index}`}>{item}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p>No additional details identified.</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <span>Actions Already Taken</span>
+                    {aiSummary.actionsTaken?.length ? (
+                      <ul>
+                        {aiSummary.actionsTaken.map((item, index) => (
+                          <li key={`${item}-${index}`}>{item}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p>No actions recorded yet.</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <span>Current Status</span>
+                    <p>{aiSummary.currentStatus}</p>
+                  </div>
+
+                  <div>
+                    <span>Recommended Next Action</span>
+                    <p>{aiSummary.recommendedNextAction}</p>
+                  </div>
+                </div>
+              )}
+            </section>
+
             <section className="view-request-section">
               <div className="view-request-conversation-heading">
                 <div>
@@ -444,6 +590,49 @@ const ViewServiceRequestModal = ({
                   </button>
                 </div>
 
+                <div className="view-request-ai-response-tool">
+                  <div className="view-request-ai-response-actions">
+                    <div>
+                      <Sparkles size={14} />
+                      <span>AI Response Suggestion</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleSuggestResponse}
+                      disabled={aiResponseLoading}
+                    >
+                      {aiResponseLoading ? "Generating..." : aiResponse ? "Regenerate" : "Generate Draft"}
+                    </button>
+                  </div>
+
+                  {aiResponseError && (
+                    <div className="view-request-ai-error">
+                      {aiResponseError}
+                    </div>
+                  )}
+
+                  {aiResponse && (
+                    <div className="view-request-ai-response-editor">
+                      <textarea
+                        rows="5"
+                        value={aiResponse}
+                        onChange={(event) => setAiResponse(event.target.value)}
+                        aria-label="Editable AI response suggestion"
+                      />
+                      <div>
+                        <span>Review and edit this draft before using it.</span>
+                        <button
+                          type="button"
+                          onClick={handleUseAiResponse}
+                          disabled={!aiResponse.trim()}
+                        >
+                          Use in Customer Response
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 <textarea
                   rows="4"
                   value={messageText}
@@ -487,6 +676,12 @@ const ViewServiceRequestModal = ({
               <h3>SLA</h3>
 
               <div className="view-request-sla">
+                <div className={`view-request-sla-status ${slaTone}`}>
+                  <Clock size={16} />
+                  <span>SLA Status</span>
+                  <strong>{slaLabel}</strong>
+                </div>
+
                 <div>
                   <Clock size={16} />
 

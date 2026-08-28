@@ -240,3 +240,123 @@
     width: 100%;
   }
 }
+
+.create-request-ai-analysis {
+  padding: 12px;
+  border: 1px solid #ede9fe;
+  border-radius: 9px;
+  background: #faf8ff;
+}
+
+.create-request-ai-analysis-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.create-request-ai-analysis-heading > div {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+}
+
+.create-request-ai-analysis-heading svg {
+  margin-top: 1px;
+  color: #7c3aed;
+}
+
+.create-request-ai-analysis-heading strong,
+.create-request-ai-analysis-heading span {
+  display: block;
+}
+
+.create-request-ai-analysis-heading strong {
+  color: #5b21b6;
+  font-size: 11px;
+}
+
+.create-request-ai-analysis-heading span {
+  margin-top: 2px;
+  color: #8a7f99;
+  font-size: 10px;
+}
+
+.create-request-ai-analysis-heading > button,
+.create-request-ai-result > button {
+  min-height: 31px;
+  padding: 0 9px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid #c4b5fd;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #6d28d9;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.create-request-ai-analysis-heading > button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.create-request-ai-result {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  align-items: end;
+  gap: 8px;
+}
+
+.create-request-ai-result > div {
+  padding: 8px;
+  border-radius: 7px;
+  background: #ffffff;
+}
+
+.create-request-ai-result span,
+.create-request-ai-result strong {
+  display: block;
+}
+
+.create-request-ai-result span {
+  color: #9a8da9;
+  font-size: 9px;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.create-request-ai-result strong {
+  margin-top: 3px;
+  color: #4c1d95;
+  font-size: 11px;
+}
+
+.create-request-ai-result p {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #6b5d78;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.create-request-ai-error {
+  margin-top: 8px;
+  color: #b91c1c;
+  font-size: 10px;
+}
+
+@media (max-width: 640px) {
+  .create-request-ai-analysis-heading,
+  .create-request-ai-result {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+  }
+}
+
+.create-request-ai-analysis.full-width {
+  grid-column: 1 / -1;
+}
