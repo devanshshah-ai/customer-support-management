@@ -390,6 +390,7 @@ const seed = async () => {
       status,
       hoursAgo,
       resolutionHoursAgo = null,
+      resolutionNote = "",
       slaHoursOverride = null,
     }) => {
       const createdAt = new Date();
@@ -419,6 +420,12 @@ const seed = async () => {
         );
       }
 
+      const finalResolutionNote =
+        resolutionNote ||
+        (status === "Resolved" || status === "Closed"
+          ? `Resolved after investigation and verification. The outcome for "${subject}" was confirmed and communicated to the customer.`
+          : "");
+
       return {
         requestNumber: number,
         customer: customer._id,
@@ -434,6 +441,7 @@ const seed = async () => {
           : null,
         status,
         resolutionDate,
+        resolutionNote: finalResolutionNote,
         slaDeadline,
         createdAt,
       };

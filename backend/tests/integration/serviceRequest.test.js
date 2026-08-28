@@ -198,13 +198,21 @@ describe("Service Request API", () => {
     });
     requestIds.push(ownedRequest._id);
 
+    const resolutionNote =
+      "Restarted the affected service, verified access, and confirmed the resolution.";
+
     const statusResponse = await request(app)
       .put(`/api/requests/${ownedRequest._id}`)
       .set("Authorization", `Bearer ${agentOneToken}`)
-      .send({ status: "Under Investigation" });
+      .send({
+        status: "Resolved",
+        resolutionNote,
+      });
 
     expect(statusResponse.statusCode).toBe(200);
-    expect(statusResponse.body.data.request.status).toBe("Under Investigation");
+    expect(statusResponse.body.data.request.status).toBe("Resolved");
+    expect(statusResponse.body.data.request.resolutionNote).toBe(resolutionNote);
+    expect(statusResponse.body.data.request.resolutionDate).toBeTruthy();
 
     const contentResponse = await request(app)
       .put(`/api/requests/${ownedRequest._id}`)

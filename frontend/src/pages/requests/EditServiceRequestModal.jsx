@@ -28,6 +28,7 @@ const EditServiceRequestModal = ({
     assignedTeam: "",
     assignedAgent: "",
     status: "",
+    resolutionNote: "",
   });
 
   const [errors, setErrors] = useState({});
@@ -71,6 +72,9 @@ const EditServiceRequestModal = ({
 
       status:
         request.status || "",
+
+      resolutionNote:
+        request.resolutionNote || "",
     });
   }, [request]);
 
@@ -152,7 +156,10 @@ const EditServiceRequestModal = ({
       setApiError("");
 
       const payload = isAgent
-        ? { status: formData.status }
+        ? {
+            status: formData.status,
+            resolutionNote: formData.resolutionNote.trim(),
+          }
         : {
             customer: formData.customer,
             subject: formData.subject.trim(),
@@ -162,6 +169,7 @@ const EditServiceRequestModal = ({
             status: formData.status,
             assignedTeam: formData.assignedTeam || null,
             assignedAgent: formData.assignedAgent || null,
+            resolutionNote: formData.resolutionNote.trim(),
           };
 
       await api.put(
@@ -234,7 +242,7 @@ const EditServiceRequestModal = ({
 
           {isAgent && (
             <div className="edit-request-api-error">
-              Support agents can update status only. Assignment and request details are managed by support managers.
+              Support agents can update status and resolution notes. Assignment and request details are managed by support managers.
             </div>
           )}
 
@@ -422,69 +430,127 @@ const EditServiceRequestModal = ({
               )}
             </div>
 
-            <div className="edit-request-field">
+            <div className="edit-request-field full-width">
               <label>
-                Support Team
+                Resolution Note
               </label>
 
-              <select
-                name="assignedTeam"
-                value={formData.assignedTeam}
+              <textarea
+                name="resolutionNote"
+                rows="4"
+                value={formData.resolutionNote}
                 onChange={handleChange}
-                disabled={loading || isAgent}
-              >
-                <option value="">
-                  Unassigned
-                </option>
+                maxLength={2000}
+                disabled={loading}
+                placeholder="Document the resolution, verification performed, or final outcome..."
+              />
 
-                {teams.map((team) => (
-                  <option
-                    key={
-                      team._id ||
-                      team.id
-                    }
-                    value={
-                      team._id ||
-                      team.id
-                    }
-                  >
-                    {team.name}
-                  </option>
-                ))}
-              </select>
+              <small>
+                {formData.resolutionNote.length}/2000
+              </small>
             </div>
 
-            <div className="edit-request-field">
-              <label>
-                Support Agent
-              </label>
+            {isAgent ? (
+              <>
+                <div className="edit-request-field">
+                  <label>
+                    Support Team
+                  </label>
 
-              <select
-                name="assignedAgent"
-                value={formData.assignedAgent}
-                onChange={handleChange}
-                disabled={loading || isAgent}
-              >
-                <option value="">
-                  Unassigned
-                </option>
-
-                {agents.map((agent) => (
-                  <option
-                    key={
-                      agent._id ||
-                      agent.id
-                    }
+                  <input
+                    type="text"
                     value={
-                      agent._id ||
-                      agent.id
+                      request?.assignedTeam?.name ||
+                      "No team assigned"
                     }
+                    disabled
+                    readOnly
+                  />
+                </div>
+
+                <div className="edit-request-field">
+                  <label>
+                    Support Agent
+                  </label>
+
+                  <input
+                    type="text"
+                    value={
+                      request?.assignedAgent?.name ||
+                      "Assigned to you"
+                    }
+                    disabled
+                    readOnly
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="edit-request-field">
+                  <label>
+                    Support Team
+                  </label>
+
+                  <select
+                    name="assignedTeam"
+                    value={formData.assignedTeam}
+                    onChange={handleChange}
+                    disabled={loading}
                   >
-                    {agent.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+                    <option value="">
+                      Unassigned
+                    </option>
+
+                    {teams.map((team) => (
+                      <option
+                        key={
+                          team._id ||
+                          team.id
+                        }
+                        value={
+                          team._id ||
+                          team.id
+                        }
+                      >
+                        {team.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="edit-request-field">
+                  <label>
+                    Support Agent
+                  </label>
+
+                  <select
+                    name="assignedAgent"
+                    value={formData.assignedAgent}
+                    onChange={handleChange}
+                    disabled={loading}
+                  >
+                    <option value="">
+                      Unassigned
+                    </option>
+
+                    {agents.map((agent) => (
+                      <option
+                        key={
+                          agent._id ||
+                          agent.id
+                        }
+                        value={
+                          agent._id ||
+                          agent.id
+                        }
+                      >
+                        {agent.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </>
+            )}
           </div>
 
           <div className="edit-request-footer">

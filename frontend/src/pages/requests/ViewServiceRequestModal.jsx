@@ -439,6 +439,23 @@ const ViewServiceRequestModal = ({
               </div>
             </section>
 
+            <section className="view-request-section">
+              <h3>Resolution</h3>
+
+              <div className="view-request-info-grid">
+                <div className="view-request-info-full">
+                  <span>
+                    Resolution Note
+                  </span>
+
+                  <p>
+                    {requestData?.resolutionNote ||
+                      "No resolution note has been added yet."}
+                  </p>
+                </div>
+              </div>
+            </section>
+
             <section className="view-request-section view-request-ai-section">
               <div className="view-request-ai-heading">
                 <div>

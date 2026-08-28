@@ -80,6 +80,13 @@ const serviceRequestSchema = new mongoose.Schema(
       default: null,
     },
 
+    resolutionNote: {
+      type: String,
+      trim: true,
+      maxlength: 2000,
+      default: "",
+    },
+
     slaDeadline: {
       type: Date,
       required: true,

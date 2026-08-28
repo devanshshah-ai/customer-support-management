@@ -181,11 +181,18 @@ const createServiceRequest = async (data, actor = null) => {
     createdAt
   );
 
+  const isResolvedOnCreate =
+    data.status === "Resolved" ||
+    data.status === "Closed";
+
   const request = await ServiceRequest.create({
     ...data,
     requestNumber,
     createdAt,
     slaDeadline,
+    resolutionDate: isResolvedOnCreate
+      ? new Date()
+      : null,
   });
 
   /*
@@ -618,12 +625,16 @@ const updateServiceRequest = async (
   /*
    * Resolution date handling
    */
-  if (
-    data.status === "Resolved" &&
-    previousStatus !== "Resolved"
-  ) {
-    request.resolutionDate =
-      new Date();
+  const isClosingRequest =
+    data.status === "Resolved" ||
+    data.status === "Closed";
+
+  const wasAlreadyClosed =
+    previousStatus === "Resolved" ||
+    previousStatus === "Closed";
+
+  if (isClosingRequest && !wasAlreadyClosed) {
+    request.resolutionDate = new Date();
   }
 
   /*

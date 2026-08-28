@@ -10,7 +10,6 @@ const {
 
 const register = async (req, res, next) => {
   try {
-    console.log("REGISTER BODY:", req.body);
     const validationResult = registerSchema.safeParse(req.body);
 
     if (!validationResult.success) {

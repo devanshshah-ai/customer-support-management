@@ -38,6 +38,12 @@ const createServiceRequestSchema = z.object({
       "Closed",
     ])
     .optional(),
+
+  resolutionNote: z
+    .string()
+    .trim()
+    .max(2000, "Resolution note cannot exceed 2000 characters")
+    .optional(),
 });
 
 const updateServiceRequestSchema = z
@@ -84,6 +90,12 @@ const updateServiceRequestSchema = z
         "Resolved",
         "Closed",
       ])
+      .optional(),
+
+    resolutionNote: z
+      .string()
+      .trim()
+      .max(2000, "Resolution note cannot exceed 2000 characters")
       .optional(),
   })
   .refine(

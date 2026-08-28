@@ -37,14 +37,14 @@ const assertAgentUpdateFields = (updates, actor) => {
     return;
   }
 
-  const allowedFields = new Set(["status"]);
+  const allowedFields = new Set(["status", "resolutionNote"]);
   const forbiddenFields = Object.keys(updates).filter(
     (field) => !allowedFields.has(field)
   );
 
   if (forbiddenFields.length > 0) {
     const error = new Error(
-      "Support agents can only update the request status"
+      "Support agents can only update the request status and resolution note"
     );
     error.statusCode = 403;
     throw error;
