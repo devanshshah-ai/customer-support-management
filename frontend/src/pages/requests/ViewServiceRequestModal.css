@@ -365,3 +365,192 @@
     grid-column: auto;
   }
 }
+
+.view-request-conversation-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.view-request-conversation-heading h3 {
+  margin-bottom: 4px;
+}
+
+.view-request-conversation-heading p {
+  margin: 0;
+  color: #8a93a1;
+  font-size: 11px;
+}
+
+.view-request-conversation-heading > svg {
+  color: #2563eb;
+}
+
+.view-request-messages {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: 3px;
+}
+
+.view-request-message {
+  padding: 12px 13px;
+  border: 1px solid #dbeafe;
+  border-left: 3px solid #2563eb;
+  border-radius: 9px;
+  background: #f8fbff;
+}
+
+.view-request-message.internal {
+  border-color: #ede9fe;
+  border-left-color: #7c3aed;
+  background: #faf8ff;
+}
+
+.view-request-message-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.view-request-message-meta > div {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #2563eb;
+}
+
+.view-request-message.internal .view-request-message-meta > div {
+  color: #7c3aed;
+}
+
+.view-request-message-meta strong {
+  font-size: 11px;
+}
+
+.view-request-message-meta > span,
+.view-request-message-author {
+  color: #8a93a1;
+  font-size: 10px;
+}
+
+.view-request-message p {
+  margin: 9px 0 7px;
+  color: #374151;
+  font-size: 12px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.view-request-message-empty {
+  padding: 22px;
+  text-align: center;
+  border: 1px dashed #d8dee7;
+  border-radius: 9px;
+  color: #8a93a1;
+  font-size: 12px;
+}
+
+.view-request-message-form {
+  margin-top: 14px;
+  padding: 13px;
+  border: 1px solid #edf0f3;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.view-request-message-type {
+  display: flex;
+  gap: 7px;
+  margin-bottom: 9px;
+}
+
+.view-request-message-type button {
+  height: 32px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid #e5e7eb;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #6b7280;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.view-request-message-type button.active {
+  border-color: #93c5fd;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.view-request-message-type button.active.internal {
+  border-color: #c4b5fd;
+  background: #f5f3ff;
+  color: #6d28d9;
+}
+
+.view-request-message-form textarea {
+  width: 100%;
+  resize: vertical;
+  padding: 10px 11px;
+  border: 1px solid #dfe4ea;
+  border-radius: 8px;
+  outline: none;
+  color: #374151;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.5;
+  box-sizing: border-box;
+}
+
+.view-request-message-form textarea:focus {
+  border-color: #93c5fd;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08);
+}
+
+.view-request-message-error {
+  margin-top: 7px;
+  color: #b91c1c;
+  font-size: 11px;
+}
+
+.view-request-message-submit-row {
+  margin-top: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.view-request-message-submit-row > span {
+  color: #9ca3af;
+  font-size: 10px;
+}
+
+.view-request-message-submit-row button {
+  min-height: 34px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  border-radius: 7px;
+  background: #2563eb;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.view-request-message-submit-row button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

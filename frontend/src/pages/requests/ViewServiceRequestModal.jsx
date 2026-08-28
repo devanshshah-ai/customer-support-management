@@ -7,6 +7,10 @@ import {
   Building2,
   Calendar,
   Clock,
+  MessageSquare,
+  Send,
+  LockKeyhole,
+  Globe2,
 } from "lucide-react";
 
 import api from "../../services/api";
@@ -22,12 +26,18 @@ const ViewServiceRequestModal = ({
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [messages, setMessages] = useState([]);
+  const [messagesLoading, setMessagesLoading] = useState(false);
+  const [messageType, setMessageType] = useState("customer");
+  const [messageText, setMessageText] = useState("");
+  const [messageSaving, setMessageSaving] = useState(false);
+  const [messageError, setMessageError] = useState("");
 
   const requestId =
     request?._id || request?.id;
 
   useEffect(() => {
-    const fetchRequest = async () => {
+    const loadRequest = async () => {
       if (!requestId) {
         setLoading(false);
         return;
@@ -35,33 +45,73 @@ const ViewServiceRequestModal = ({
 
       try {
         setLoading(true);
+        setMessagesLoading(true);
         setError("");
+        setMessageError("");
 
-        const response = await api.get(
-          `/requests/${requestId}`
-        );
+        const [requestResponse, messageResponse] = await Promise.all([
+          api.get(`/requests/${requestId}`),
+          api.get(`/requests/${requestId}/messages`, {
+            params: { page: 1, limit: 100 },
+          }),
+        ]);
 
         setRequestData(
-          response.data?.data?.request ||
-            request
+          requestResponse.data?.data?.request || request
+        );
+        setMessages(
+          messageResponse.data?.data?.messages || []
         );
       } catch (err) {
-        console.error(
-          "Failed to fetch service request:",
-          err
-        );
-
+        console.error("Failed to fetch service request:", err);
         setError(
           err.response?.data?.message ||
             "Failed to load request details."
         );
       } finally {
         setLoading(false);
+        setMessagesLoading(false);
       }
     };
 
-    fetchRequest();
+    loadRequest();
   }, [requestId, request]);
+
+  const handleAddMessage = async (event) => {
+    event.preventDefault();
+
+    const trimmedMessage = messageText.trim();
+    if (!trimmedMessage || !requestId) {
+      return;
+    }
+
+    try {
+      setMessageSaving(true);
+      setMessageError("");
+
+      const response = await api.post(
+        `/requests/${requestId}/messages`,
+        {
+          message: trimmedMessage,
+          type: messageType,
+        }
+      );
+
+      const createdMessage = response.data?.data?.message;
+      if (createdMessage) {
+        setMessages((current) => [...current, createdMessage]);
+      }
+      setMessageText("");
+    } catch (err) {
+      console.error("Failed to add request message:", err);
+      setMessageError(
+        err.response?.data?.message ||
+          "Failed to add communication."
+      );
+    } finally {
+      setMessageSaving(false);
+    }
+  };
 
   const formatDateTime = (value) => {
     if (!value) {
@@ -317,6 +367,120 @@ const ViewServiceRequestModal = ({
                   </strong>
                 </div>
               </div>
+            </section>
+
+            <section className="view-request-section">
+              <div className="view-request-conversation-heading">
+                <div>
+                  <h3>Conversation History</h3>
+                  <p>Customer-facing responses and private internal notes.</p>
+                </div>
+                <MessageSquare size={18} />
+              </div>
+
+              <div className="view-request-messages">
+                {messagesLoading ? (
+                  <div className="view-request-message-empty">
+                    Loading conversation...
+                  </div>
+                ) : messages.length === 0 ? (
+                  <div className="view-request-message-empty">
+                    No communication has been recorded yet.
+                  </div>
+                ) : (
+                  messages.map((item) => (
+                    <article
+                      className={`view-request-message ${
+                        item.type === "internal" ? "internal" : "customer"
+                      }`}
+                      key={item._id || item.id}
+                    >
+                      <div className="view-request-message-meta">
+                        <div>
+                          {item.type === "internal" ? (
+                            <LockKeyhole size={13} />
+                          ) : (
+                            <Globe2 size={13} />
+                          )}
+                          <strong>
+                            {item.type === "internal"
+                              ? "Internal Note"
+                              : "Customer-facing Response"}
+                          </strong>
+                        </div>
+                        <span>{formatDateTime(item.createdAt)}</span>
+                      </div>
+
+                      <p>{item.message}</p>
+
+                      <span className="view-request-message-author">
+                        Added by {item.author?.name || "Support User"}
+                      </span>
+                    </article>
+                  ))
+                )}
+              </div>
+
+              <form
+                className="view-request-message-form"
+                onSubmit={handleAddMessage}
+              >
+                <div className="view-request-message-type">
+                  <button
+                    type="button"
+                    className={messageType === "customer" ? "active" : ""}
+                    onClick={() => setMessageType("customer")}
+                    disabled={messageSaving}
+                  >
+                    <Globe2 size={14} /> Customer Response
+                  </button>
+                  <button
+                    type="button"
+                    className={messageType === "internal" ? "active internal" : ""}
+                    onClick={() => setMessageType("internal")}
+                    disabled={messageSaving}
+                  >
+                    <LockKeyhole size={14} /> Internal Note
+                  </button>
+                </div>
+
+                <textarea
+                  rows="4"
+                  value={messageText}
+                  onChange={(event) => {
+                    setMessageText(event.target.value);
+                    setMessageError("");
+                  }}
+                  placeholder={
+                    messageType === "internal"
+                      ? "Add a private note for the support team..."
+                      : "Write a response that can be shared with the customer..."
+                  }
+                  maxLength={5000}
+                  disabled={messageSaving}
+                />
+
+                {messageError && (
+                  <div className="view-request-message-error">
+                    {messageError}
+                  </div>
+                )}
+
+                <div className="view-request-message-submit-row">
+                  <span>{messageText.length}/5000</span>
+                  <button
+                    type="submit"
+                    disabled={!messageText.trim() || messageSaving}
+                  >
+                    {messageSaving ? (
+                      <Loader2 size={15} className="view-request-spinner" />
+                    ) : (
+                      <Send size={15} />
+                    )}
+                    {messageSaving ? "Adding..." : "Add Communication"}
+                  </button>
+                </div>
+              </form>
             </section>
 
             <section className="view-request-section">
