@@ -1,5 +1,13 @@
-import { X, Pencil, User } from "lucide-react";
+import { useEffect, useState } from "react";
+import {
+  X,
+  Pencil,
+  User,
+  History,
+  Loader2,
+} from "lucide-react";
 
+import customerService from "../../features/customers/customerService";
 import "./ViewCustomerModal.css";
 
 const ViewCustomerModal = ({
@@ -7,66 +15,87 @@ const ViewCustomerModal = ({
   onClose,
   onEdit,
 }) => {
+  const [profile, setProfile] = useState(customer);
+  const [serviceRequests, setServiceRequests] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(true);
+  const [historyError, setHistoryError] = useState("");
+
+  const customerId = customer?.id || customer?._id;
+
+  useEffect(() => {
+    const loadHistory = async () => {
+      if (!customerId) {
+        setHistoryLoading(false);
+        return;
+      }
+
+      try {
+        setHistoryLoading(true);
+        setHistoryError("");
+
+        const response = await customerService.getCustomerById(
+          customerId
+        );
+        const data = response?.data || {};
+
+        setProfile(data.customer || customer);
+        setServiceRequests(data.serviceRequests || []);
+      } catch (error) {
+        console.error("Failed to load customer history:", error);
+        setHistoryError(
+          error.response?.data?.message ||
+            "Failed to load customer service history."
+        );
+      } finally {
+        setHistoryLoading(false);
+      }
+    };
+
+    loadHistory();
+  }, [customerId, customer]);
+
   if (!customer) {
     return null;
   }
 
-  const getInitials = (name = "") => {
-    return name
+  const getInitials = (name = "") =>
+    name
       .split(" ")
       .filter(Boolean)
       .slice(0, 2)
       .map((part) => part.charAt(0).toUpperCase())
       .join("");
+
+  const formatValue = (value) => value || "—";
+
+  const titleCase = (value) => {
+    if (!value) return "—";
+    return value.charAt(0).toUpperCase() + value.slice(1);
   };
 
-  const formatValue = (value) => {
-    if (!value) {
-      return "—";
-    }
-
-    return value;
-  };
-
-  const formatCustomerType = (type) => {
-    if (!type) {
-      return "—";
-    }
-
-    return type.charAt(0).toUpperCase() + type.slice(1);
-  };
-
-  const formatAccountStatus = (status) => {
-    if (!status) {
-      return "—";
-    }
-
-    return status.charAt(0).toUpperCase() + status.slice(1);
+  const formatDate = (value) => {
+    if (!value) return "—";
+    return new Date(value).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
   };
 
   return (
-    <div
-      className="view-customer-overlay"
-      onMouseDown={onClose}
-    >
+    <div className="view-customer-overlay" onMouseDown={onClose}>
       <div
         className="view-customer-modal"
-        onMouseDown={(event) =>
-          event.stopPropagation()
-        }
+        onMouseDown={(event) => event.stopPropagation()}
       >
-        {/* HEADER */}
         <div className="view-customer-header">
           <div className="view-customer-header-title">
             <div className="view-customer-header-avatar">
-              {getInitials(customer.name) || (
-                <User size={18} />
-              )}
+              {getInitials(profile?.name) || <User size={18} />}
             </div>
-
             <div className="view-customer-header-text">
               <h2>Customer Details</h2>
-              <p>Customer profile information</p>
+              <p>Profile and service request history</p>
             </div>
           </div>
 
@@ -80,26 +109,18 @@ const ViewCustomerModal = ({
           </button>
         </div>
 
-        {/* BODY */}
         <div className="view-customer-body">
           <div className="view-customer-profile">
             <div className="view-customer-profile-avatar">
-              {getInitials(customer.name) || (
-                <User size={22} />
-              )}
+              {getInitials(profile?.name) || <User size={22} />}
             </div>
-
             <div className="view-customer-profile-info">
-              <h3>{formatValue(customer.name)}</h3>
-
-              <p>{formatValue(customer.email)}</p>
-
+              <h3>{formatValue(profile?.name)}</h3>
+              <p>{formatValue(profile?.email)}</p>
               <span
-                className={`view-customer-status view-customer-status-${customer.accountStatus}`}
+                className={`view-customer-status view-customer-status-${profile?.accountStatus}`}
               >
-                {formatAccountStatus(
-                  customer.accountStatus
-                )}
+                {titleCase(profile?.accountStatus)}
               </span>
             </div>
           </div>
@@ -107,65 +128,106 @@ const ViewCustomerModal = ({
           <div className="view-customer-details-grid">
             <div className="view-customer-detail-card">
               <span>Full Name</span>
-              <strong>
-                {formatValue(customer.name)}
-              </strong>
+              <strong>{formatValue(profile?.name)}</strong>
             </div>
-
             <div className="view-customer-detail-card">
               <span>Email</span>
-              <strong>
-                {formatValue(customer.email)}
-              </strong>
+              <strong>{formatValue(profile?.email)}</strong>
             </div>
-
             <div className="view-customer-detail-card">
               <span>Phone</span>
-              <strong>
-                {formatValue(customer.phone)}
-              </strong>
+              <strong>{formatValue(profile?.phone)}</strong>
             </div>
-
             <div className="view-customer-detail-card">
               <span>Company</span>
-              <strong>
-                {formatValue(customer.company)}
-              </strong>
+              <strong>{formatValue(profile?.company)}</strong>
             </div>
-
             <div className="view-customer-detail-card">
               <span>Location</span>
-              <strong>
-                {formatValue(customer.location)}
-              </strong>
+              <strong>{formatValue(profile?.location)}</strong>
             </div>
-
             <div className="view-customer-detail-card">
               <span>Customer Type</span>
-              <strong>
-                {formatCustomerType(
-                  customer.customerType
-                )}
-              </strong>
+              <strong>{titleCase(profile?.customerType)}</strong>
             </div>
-
             <div className="view-customer-detail-card full-width">
               <span>Account Status</span>
-
               <strong>
                 <span
-                  className={`view-customer-status view-customer-status-${customer.accountStatus}`}
+                  className={`view-customer-status view-customer-status-${profile?.accountStatus}`}
                 >
-                  {formatAccountStatus(
-                    customer.accountStatus
-                  )}
+                  {titleCase(profile?.accountStatus)}
                 </span>
               </strong>
             </div>
           </div>
+
+          <section className="view-customer-history-section">
+            <div className="view-customer-history-heading">
+              <div>
+                <History size={17} />
+                <div>
+                  <h3>Service History</h3>
+                  <p>All requests recorded for this customer.</p>
+                </div>
+              </div>
+              <span>{serviceRequests.length} requests</span>
+            </div>
+
+            {historyLoading ? (
+              <div className="view-customer-history-empty">
+                <Loader2 className="view-customer-history-spinner" size={18} />
+                Loading service history...
+              </div>
+            ) : historyError ? (
+              <div className="view-customer-history-error">
+                {historyError}
+              </div>
+            ) : serviceRequests.length === 0 ? (
+              <div className="view-customer-history-empty">
+                No service requests recorded for this customer.
+              </div>
+            ) : (
+              <div className="view-customer-history-table-wrap">
+                <table className="view-customer-history-table">
+                  <thead>
+                    <tr>
+                      <th>Request</th>
+                      <th>Subject</th>
+                      <th>Severity</th>
+                      <th>Status</th>
+                      <th>Agent</th>
+                      <th>Created</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {serviceRequests.map((item) => (
+                      <tr key={item._id || item.id}>
+                        <td>
+                          <strong>{item.requestNumber || "—"}</strong>
+                        </td>
+                        <td>{item.subject || "—"}</td>
+                        <td>
+                          <span className={`view-customer-history-badge severity-${String(item.severity || "").toLowerCase()}`}>
+                            {item.severity || "—"}
+                          </span>
+                        </td>
+                        <td>
+                          <span className="view-customer-history-badge status">
+                            {item.status || "—"}
+                          </span>
+                        </td>
+                        <td>{item.assignedAgent?.name || "Unassigned"}</td>
+                        <td>{formatDate(item.createdAt)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
         </div>
 
-        {/* FOOTER */}
         <div className="view-customer-footer">
           <button
             type="button"
@@ -174,7 +236,6 @@ const ViewCustomerModal = ({
           >
             Close
           </button>
-
           <button
             type="button"
             className="view-customer-edit-button"

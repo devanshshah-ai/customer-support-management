@@ -539,3 +539,147 @@
     width: 100%;
   }
 }
+/* ========================================
+   SERVICE HISTORY
+======================================== */
+.view-customer-history-section {
+  margin-top: 24px;
+  padding-top: 22px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.view-customer-history-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 13px;
+}
+
+.view-customer-history-heading > div {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+}
+
+.view-customer-history-heading svg {
+  margin-top: 2px;
+  color: #2563eb;
+}
+
+.view-customer-history-heading h3 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 14px;
+}
+
+.view-customer-history-heading p {
+  margin: 3px 0 0;
+  color: #64748b;
+  font-size: 11px;
+}
+
+.view-customer-history-heading > span {
+  flex-shrink: 0;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.view-customer-history-table-wrap {
+  overflow-x: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+
+.view-customer-history-table {
+  width: 100%;
+  min-width: 660px;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.view-customer-history-table th,
+.view-customer-history-table td {
+  padding: 10px 11px;
+  text-align: left;
+  border-bottom: 1px solid #eef2f7;
+  color: #475569;
+}
+
+.view-customer-history-table th {
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.view-customer-history-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.view-customer-history-table td strong {
+  color: #1d4ed8;
+}
+
+.view-customer-history-badge {
+  display: inline-flex;
+  padding: 4px 7px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.view-customer-history-badge.severity-critical {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.view-customer-history-badge.severity-high {
+  background: #ffedd5;
+  color: #c2410c;
+}
+
+.view-customer-history-badge.severity-medium {
+  background: #fef3c7;
+  color: #a16207;
+}
+
+.view-customer-history-badge.severity-low {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.view-customer-history-empty,
+.view-customer-history-error {
+  min-height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 15px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 10px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.view-customer-history-error {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.view-customer-history-spinner {
+  animation: view-customer-history-spin 1s linear infinite;
+}
+
+@keyframes view-customer-history-spin {
+  to { transform: rotate(360deg); }
+}
