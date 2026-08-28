@@ -137,12 +137,29 @@ const callGeminiStructured = async ({ prompt, responseSchema }) => {
       ? payload.steps.filter((step) => step?.type === "model_output")
       : [];
 
-    const text = modelOutputSteps
+    const interactionText = modelOutputSteps
       .flatMap((step) => (Array.isArray(step.content) ? step.content : []))
       .filter((item) => item?.type === "text" && typeof item.text === "string")
       .map((item) => item.text)
       .join("")
       .trim();
+
+    // Keep a compatibility fallback for mocked/legacy generateContent-shaped
+    // responses. Production calls still use the Gemini Interactions API above.
+    const legacyText = Array.isArray(payload?.candidates)
+      ? payload.candidates
+          .flatMap((candidate) =>
+            Array.isArray(candidate?.content?.parts)
+              ? candidate.content.parts
+              : []
+          )
+          .filter((part) => typeof part?.text === "string")
+          .map((part) => part.text)
+          .join("")
+          .trim()
+      : "";
+
+    const text = interactionText || legacyText;
 
     if (!text) {
       const error = new Error("AI provider returned an empty response");
@@ -169,6 +186,74 @@ const callGeminiStructured = async ({ prompt, responseSchema }) => {
     clearTimeout(timeout);
   }
 };
+
+const invalidAiResponse = () => {
+  const error = new Error("AI provider returned an invalid response");
+  error.statusCode = 502;
+  throw error;
+};
+
+const isNonEmptyString = (value) =>
+  typeof value === "string" && value.trim().length > 0;
+
+const validateSummary = (summary) => {
+  if (
+    !summary ||
+    !isNonEmptyString(summary.customerProblem) ||
+    !Array.isArray(summary.importantDetails) ||
+    !summary.importantDetails.every(isNonEmptyString) ||
+    !Array.isArray(summary.actionsTaken) ||
+    !summary.actionsTaken.every(isNonEmptyString) ||
+    !isNonEmptyString(summary.currentStatus) ||
+    !isNonEmptyString(summary.recommendedNextAction)
+  ) {
+    invalidAiResponse();
+  }
+
+  return {
+    customerProblem: summary.customerProblem.trim(),
+    importantDetails: summary.importantDetails.map((item) => item.trim()),
+    actionsTaken: summary.actionsTaken.map((item) => item.trim()),
+    currentStatus: summary.currentStatus.trim(),
+    recommendedNextAction: summary.recommendedNextAction.trim(),
+  };
+};
+
+const validateResponseSuggestion = (result) => {
+  if (!result || !isNonEmptyString(result.response)) {
+    invalidAiResponse();
+  }
+
+  return result.response.trim();
+};
+
+const validateIssueRecommendation = (recommendation) => {
+  const allowedCategories = new Set([
+    "Technical Issue",
+    "Billing",
+    "Account",
+    "Product Information",
+    "Delivery",
+    "Complaint",
+  ]);
+  const allowedSeverities = new Set(["Critical", "High", "Medium", "Low"]);
+
+  if (
+    !recommendation ||
+    !allowedCategories.has(recommendation.category) ||
+    !allowedSeverities.has(recommendation.severity) ||
+    !isNonEmptyString(recommendation.reason)
+  ) {
+    invalidAiResponse();
+  }
+
+  return {
+    category: recommendation.category,
+    severity: recommendation.severity,
+    reason: recommendation.reason.trim(),
+  };
+};
+
 const generateRequestSummary = async (requestId, actor) => {
   const context = await getRequestContext(requestId, actor);
   const contextText = createContextText(context);
@@ -208,7 +293,7 @@ const generateRequestSummary = async (requestId, actor) => {
     description: `AI summary generated for service request ${context.request.requestNumber}`,
   });
 
-  return summary;
+  return validateSummary(summary);
 };
 
 const generateResponseSuggestion = async (requestId, actor) => {
@@ -234,11 +319,11 @@ const generateResponseSuggestion = async (requestId, actor) => {
     description: `AI response suggestion generated for service request ${context.request.requestNumber}`,
   });
 
-  return result.response;
+  return validateResponseSuggestion(result);
 };
 
 const analyzeNewRequest = async ({ subject, description }) => {
-  return callGeminiStructured({
+  const recommendation = await callGeminiStructured({
     prompt: `Classify the following customer support issue for a US-based service company. Choose exactly one category and one severity from the allowed values. Severity should reflect operational/customer impact, not emotional wording. Return a short factual reason.\n\nAllowed categories: Technical Issue, Billing, Account, Product Information, Delivery, Complaint.\nAllowed severities: Critical, High, Medium, Low.\n\nSeverity guidance:\n- Critical: service outage, severe business impact, security/safety-like urgency, or no viable workaround\n- High: major functionality blocked or significant customer impact\n- Medium: normal support issue with limited workaround or moderate impact\n- Low: informational/minor issue with little immediate impact\n\nSubject: ${subject}\nDescription: ${description}`,
     responseSchema: {
       type: "object",
@@ -263,12 +348,17 @@ const analyzeNewRequest = async ({ subject, description }) => {
       required: ["category", "severity", "reason"],
     },
   });
+
+  return validateIssueRecommendation(recommendation);
 };
 
 module.exports = {
   callGeminiStructured,
   getRequestContext,
   createContextText,
+  validateSummary,
+  validateResponseSuggestion,
+  validateIssueRecommendation,
   generateRequestSummary,
   generateResponseSuggestion,
   analyzeNewRequest,

@@ -110,7 +110,7 @@ const generateRequestNumber = async () => {
   const counter = await Counter.findOneAndUpdate(
     { _id: "serviceRequest" },
     { $inc: { sequence: 1 } },
-    { new: true }
+    { returnDocument: "after" }
   );
 
   return `SR-${counter.sequence}`;

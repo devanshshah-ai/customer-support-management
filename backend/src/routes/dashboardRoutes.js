@@ -7,24 +7,13 @@ const {
   getDashboardAnalytics,
 } = require("../controllers/dashboardController");
 
-const {
-  authenticate,
-  authorize,
-} = require("../middleware/authMiddleware");
+const { authenticate } = require("../middleware/authMiddleware");
 
 router.use(authenticate);
 
-// Dashboard is intended for management roles.
-router.get(
-  "/summary",
-  authorize("admin", "manager"),
-  getDashboardSummary
-);
-
-router.get(
-  "/analytics",
-  authorize("admin", "manager"),
-  getDashboardAnalytics
-);
+// Admin/Manager see organization-wide metrics.
+// Agents receive the same shape scoped to their assigned requests.
+router.get("/summary", getDashboardSummary);
+router.get("/analytics", getDashboardAnalytics);
 
 module.exports = router;

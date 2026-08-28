@@ -25,8 +25,8 @@ app.use(
   })
 );
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -83,13 +83,29 @@ app.use((req, res) => {
 app.use((err, req, res, next) => {
   console.error(err);
 
-  const statusCode = err.statusCode || 500;
+  let statusCode = err.statusCode || 500;
+  let message = err.message;
+
+  if (err.type === "entity.too.large") {
+    statusCode = 413;
+    message = "Request body is too large";
+  } else if (err instanceof SyntaxError && err.status === 400 && "body" in err) {
+    statusCode = 400;
+    message = "Invalid JSON payload";
+  } else if (err.name === "CastError") {
+    statusCode = 400;
+    message = "Invalid identifier";
+  } else if (err.code === 11000) {
+    statusCode = 409;
+    message = "A record with the same unique value already exists";
+  }
+
   const response = {
     success: false,
-    message: statusCode === 500 ? "Internal server error" : err.message,
+    message: statusCode === 500 ? "Internal server error" : message,
   };
 
-  if (err.details) {
+  if (err.details && statusCode < 500) {
     response.details = err.details;
   }
 

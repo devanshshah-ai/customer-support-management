@@ -1,7 +1,15 @@
 const ServiceRequest = require("../models/ServiceRequest");
 const { getSlaStatus } = require("./slaService");
+const { getRequestScope } = require("./requestAccessService");
 
-const getDashboardSummary = async () => {
+const withScope = (scope, extra = {}) => ({
+  ...scope,
+  ...extra,
+});
+
+const getDashboardSummary = async (actor) => {
+  const scope = getRequestScope(actor);
+
   const [
     totalOpen,
     underInvestigation,
@@ -9,40 +17,37 @@ const getDashboardSummary = async () => {
     criticalIssues,
     totalRequests,
   ] = await Promise.all([
-    ServiceRequest.countDocuments({
-      status: "Open",
-    }),
-
-    ServiceRequest.countDocuments({
-      status: "Under Investigation",
-    }),
-
-    ServiceRequest.countDocuments({
-      status: {
-        $in: ["Resolved", "Closed"],
-      },
-    }),
-
-    ServiceRequest.countDocuments({
-      severity: "Critical",
-      status: {
-        $nin: ["Resolved", "Closed"],
-      },
-    }),
-
-    ServiceRequest.countDocuments(),
+    ServiceRequest.countDocuments(
+      withScope(scope, { status: "Open" })
+    ),
+    ServiceRequest.countDocuments(
+      withScope(scope, {
+        status: "Under Investigation",
+      })
+    ),
+    ServiceRequest.countDocuments(
+      withScope(scope, {
+        status: { $in: ["Resolved", "Closed"] },
+      })
+    ),
+    ServiceRequest.countDocuments(
+      withScope(scope, {
+        severity: "Critical",
+        status: { $nin: ["Resolved", "Closed"] },
+      })
+    ),
+    ServiceRequest.countDocuments(scope),
   ]);
 
-  const activeRequests =
-    await ServiceRequest.find({
-      status: {
-        $nin: ["Resolved", "Closed"],
-      },
+  const activeRequests = await ServiceRequest.find(
+    withScope(scope, {
+      status: { $nin: ["Resolved", "Closed"] },
     })
-      .select(
-        "severity status createdAt slaDeadline resolutionDate"
-      )
-      .lean();
+  )
+    .select(
+      "severity status createdAt slaDeadline resolutionDate"
+    )
+    .lean();
 
   let slaBreaches = 0;
   let slaApproaching = 0;
@@ -56,11 +61,11 @@ const getDashboardSummary = async () => {
     );
 
     if (slaStatus === "BREACHED") {
-      slaBreaches++;
+      slaBreaches += 1;
     }
 
     if (slaStatus === "APPROACHING") {
-      slaApproaching++;
+      slaApproaching += 1;
     }
   });
 
@@ -75,7 +80,12 @@ const getDashboardSummary = async () => {
   };
 };
 
-const getDashboardAnalytics = async () => {
+const getDashboardAnalytics = async (actor) => {
+  const scope = getRequestScope(actor);
+  const matchStage = Object.keys(scope).length
+    ? [{ $match: scope }]
+    : [];
+
   const [
     requestsByCategory,
     requestsBySeverity,
@@ -84,67 +94,31 @@ const getDashboardAnalytics = async () => {
     averageResolution,
   ] = await Promise.all([
     ServiceRequest.aggregate([
-      {
-        $group: {
-          _id: "$category",
-          count: {
-            $sum: 1,
-          },
-        },
-      },
-      {
-        $sort: {
-          count: -1,
-        },
-      },
+      ...matchStage,
+      { $group: { _id: "$category", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
     ]),
-
     ServiceRequest.aggregate([
-      {
-        $group: {
-          _id: "$severity",
-          count: {
-            $sum: 1,
-          },
-        },
-      },
-      {
-        $sort: {
-          count: -1,
-        },
-      },
+      ...matchStage,
+      { $group: { _id: "$severity", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
     ]),
-
     ServiceRequest.aggregate([
-      {
-        $group: {
-          _id: "$status",
-          count: {
-            $sum: 1,
-          },
-        },
-      },
-      {
-        $sort: {
-          count: -1,
-        },
-      },
+      ...matchStage,
+      { $group: { _id: "$status", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
     ]),
-
     ServiceRequest.aggregate([
+      ...matchStage,
       {
         $match: {
-          assignedAgent: {
-            $ne: null,
-          },
+          assignedAgent: { $ne: null },
         },
       },
       {
         $group: {
           _id: "$assignedAgent",
-          totalRequests: {
-            $sum: 1,
-          },
+          totalRequests: { $sum: 1 },
           openRequests: {
             $sum: {
               $cond: [
@@ -206,31 +180,20 @@ const getDashboardAnalytics = async () => {
           },
         },
       },
-      {
-        $sort: {
-          openRequests: -1,
-        },
-      },
+      { $sort: { openRequests: -1 } },
     ]),
-
     ServiceRequest.aggregate([
+      ...matchStage,
       {
         $match: {
-          status: {
-            $in: ["Resolved", "Closed"],
-          },
-          resolutionDate: {
-            $ne: null,
-          },
+          status: { $in: ["Resolved", "Closed"] },
+          resolutionDate: { $ne: null },
         },
       },
       {
         $project: {
           resolutionTime: {
-            $subtract: [
-              "$resolutionDate",
-              "$createdAt",
-            ],
+            $subtract: ["$resolutionDate", "$createdAt"],
           },
         },
       },
@@ -240,9 +203,7 @@ const getDashboardAnalytics = async () => {
           averageResolutionTimeMs: {
             $avg: "$resolutionTime",
           },
-          resolvedCount: {
-            $sum: 1,
-          },
+          resolvedCount: { $sum: 1 },
         },
       },
     ]),
@@ -250,9 +211,6 @@ const getDashboardAnalytics = async () => {
 
   const averageResolutionTimeMs =
     averageResolution[0]?.averageResolutionTimeMs || 0;
-
-  const averageResolutionTimeHours =
-    averageResolutionTimeMs / (1000 * 60 * 60);
 
   return {
     requestsByCategory,
@@ -262,7 +220,7 @@ const getDashboardAnalytics = async () => {
     averageResolutionTime: {
       milliseconds: averageResolutionTimeMs,
       hours: Number(
-        averageResolutionTimeHours.toFixed(2)
+        (averageResolutionTimeMs / (1000 * 60 * 60)).toFixed(2)
       ),
     },
   };

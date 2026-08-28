@@ -24,7 +24,7 @@ const createServiceRequest = async (req, res, next) => {
     const request =
       await serviceRequestService.createServiceRequest(
         result.data,
-        req.user.userId
+        req.user
       );
 
     return res.status(201).json({
@@ -57,7 +57,8 @@ const getServiceRequests = async (req, res, next) => {
   try {
     const result =
       await serviceRequestService.getServiceRequests(
-        req.query
+        req.query,
+        req.user
       );
 
     return res.status(200).json({
@@ -77,7 +78,8 @@ const getServiceRequestById = async (req, res, next) => {
   try {
     const request =
       await serviceRequestService.getServiceRequestById(
-        req.params.id
+        req.params.id,
+        req.user
       );
 
     return res.status(200).json({
@@ -116,7 +118,7 @@ const updateServiceRequest = async (req, res, next) => {
       await serviceRequestService.updateServiceRequest(
         req.params.id,
         result.data,
-        req.user.userId
+        req.user
       );
 
     return res.status(200).json({
