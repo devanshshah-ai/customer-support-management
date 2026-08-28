@@ -9,7 +9,7 @@
     "test": "jest --runInBand",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage --runInBand",
-    "seed:admin": "node src/utils/seedAdmin.js"
+    "seed": "node src/seed/seed.js"
   },
   "keywords": [],
   "author": "",

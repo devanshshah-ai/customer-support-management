@@ -18,6 +18,8 @@ import ServiceRequestsPage from "../pages/requests/ServiceRequestsPage";
 import TeamListPage from "../pages/teams/TeamListPage";
 import UserListPage from "../pages/users/UserListPage";
 import ReportsPage from "../pages/reports/ReportsPage";
+import NotificationsPage from "../pages/notifications/NotificationPage";
+import ProfilePage from "../pages/profile/ProfilePage";
 
 const Placeholder = ({ title }) => (
   <div className="p-8">
@@ -72,6 +74,22 @@ const AppRoutes = () => {
             <Route
               path="/requests"
               element={<ServiceRequestsPage />}
+            />
+
+
+            {/* Notifications */}
+
+            <Route
+              path="/notifications"
+              element={<NotificationsPage />}
+            />
+
+
+            {/* Profile */}
+
+            <Route
+              path="/profile"
+              element={<ProfilePage />}
             />
 
 
