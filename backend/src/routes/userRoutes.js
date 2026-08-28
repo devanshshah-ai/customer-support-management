@@ -18,28 +18,16 @@ const { ROLES } = require("../constants/auth");
 
 const router = express.Router();
 
-// All user management routes require authentication
 router.use(authenticate);
 
-// All user management routes are Admin-only
-router.use(authorize(ROLES.ADMIN));
+// Managers can read the agent directory for assignment/workload screens.
+router.get("/", authorize(ROLES.ADMIN, ROLES.MANAGER), getAll);
+router.get("/:id", authorize(ROLES.ADMIN, ROLES.MANAGER), getOne);
 
-// Create a new user
-router.post("/", create);
-
-// Get all users
-router.get("/", getAll);
-
-// Get user by ID
-router.get("/:id", getOne);
-
-// Update user
-router.put("/:id", update);
-
-// Activate / deactivate user
-router.patch("/:id/status", updateStatus);
-
-// Delete user
-router.delete("/:id", remove);
+// User administration remains Admin-only.
+router.post("/", authorize(ROLES.ADMIN), create);
+router.put("/:id", authorize(ROLES.ADMIN), update);
+router.patch("/:id/status", authorize(ROLES.ADMIN), updateStatus);
+router.delete("/:id", authorize(ROLES.ADMIN), remove);
 
 module.exports = router;

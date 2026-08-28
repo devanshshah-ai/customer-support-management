@@ -28,6 +28,7 @@ const ServiceRequestList = ({
   const [error, setError] = useState("");
 
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [status, setStatus] = useState("");
   const [severity, setSeverity] = useState("");
   const [category, setCategory] = useState("");
@@ -55,7 +56,7 @@ const ServiceRequestList = ({
         params: {
           page,
           limit: 10,
-          search: search.trim(),
+          search: debouncedSearch.trim(),
           status: status || undefined,
           severity: severity || undefined,
           category: category || undefined,
@@ -90,7 +91,7 @@ const ServiceRequestList = ({
     } finally {
       setLoading(false);
     }
-  }, [page, search, status, severity, category, refreshKey]);
+  }, [page, debouncedSearch, status, severity, category, refreshKey]);
 
   /*
    * Initial load + reload whenever
@@ -101,13 +102,13 @@ const ServiceRequestList = ({
   }, [fetchRequests]);
 
   /*
-   * Search with a small debounce
+   * Debounce the actual API search value. Updating the input itself must not
+   * recreate fetchRequests, otherwise every keystroke triggers a request.
    */
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (page !== 1) {
-        setPage(1);
-      }
+      setDebouncedSearch(search);
+      setPage(1);
     }, 400);
 
     return () => clearTimeout(timer);

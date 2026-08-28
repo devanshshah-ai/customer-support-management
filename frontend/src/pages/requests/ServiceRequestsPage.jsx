@@ -84,9 +84,10 @@ const ServiceRequestsPage = () => {
     loadAssignmentData();
   }, [loadAssignmentData]);
 
-  const handleCreateSuccess = async () => {
+  const handleCreateSuccess = () => {
     setShowCreate(false);
-    await loadAssignmentData();
+    // Creating a request does not change customer/team/agent directories.
+    // Refresh only the request list instead of making three extra API calls.
     setRefreshKey((current) => current + 1);
   };
 
@@ -100,10 +101,10 @@ const ServiceRequestsPage = () => {
     setShowEdit(true);
   };
 
-  const handleEditSuccess = async () => {
+  const handleEditSuccess = () => {
     setShowEdit(false);
     setSelectedRequest(null);
-    await loadAssignmentData();
+    // Editing a request does not change assignment directory data.
     setRefreshKey((current) => current + 1);
   };
 

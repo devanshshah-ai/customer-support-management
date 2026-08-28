@@ -20,24 +20,21 @@ const { ROLES } = require("../constants/auth");
 
 const router = express.Router();
 
-// All team routes require authentication
 router.use(authenticate);
 
-// Team management is currently Admin-only
-router.use(authorize(ROLES.ADMIN));
+// Admin and Manager can view teams for workload/assignment workflows.
+router.get("/", authorize(ROLES.ADMIN, ROLES.MANAGER), getAll);
+router.get("/:id", authorize(ROLES.ADMIN, ROLES.MANAGER), getOne);
 
-// Team CRUD
-router.post("/", create);
-router.get("/", getAll);
-router.get("/:id", getOne);
-router.put("/:id", update);
-router.patch("/:id/status", updateStatus);
-router.delete("/:id", remove);
-
-// Team membership
-router.post("/:id/members", addTeamMember);
+// Team definition and membership changes remain Admin-only.
+router.post("/", authorize(ROLES.ADMIN), create);
+router.put("/:id", authorize(ROLES.ADMIN), update);
+router.patch("/:id/status", authorize(ROLES.ADMIN), updateStatus);
+router.delete("/:id", authorize(ROLES.ADMIN), remove);
+router.post("/:id/members", authorize(ROLES.ADMIN), addTeamMember);
 router.delete(
   "/:id/members/:userId",
+  authorize(ROLES.ADMIN),
   removeTeamMember
 );
 

@@ -1,6 +1,8 @@
 const jwt = require("jsonwebtoken");
 
-const authenticate = (req, res, next) => {
+const User = require("../models/User");
+
+const authenticate = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
@@ -22,9 +24,29 @@ const authenticate = (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
+    // Resolve the user's current role/status from the database instead of
+    // trusting potentially stale role data embedded in a long-lived token.
+    const user = await User.findById(decoded.userId).select(
+      "_id role isActive"
+    );
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "User account no longer exists",
+      });
+    }
+
+    if (!user.isActive) {
+      return res.status(403).json({
+        success: false,
+        message: "Your account is inactive",
+      });
+    }
+
     req.user = {
-      userId: decoded.userId,
-      role: decoded.role,
+      userId: user._id.toString(),
+      role: user.role,
     };
 
     next();
