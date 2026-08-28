@@ -19,6 +19,8 @@ const ServiceRequestList = ({
   onCreate,
   onView,
   onEdit,
+  refreshKey,
+  currentUserRole,
 }) => {
   const [requests, setRequests] = useState([]);
 
@@ -88,7 +90,7 @@ const ServiceRequestList = ({
     } finally {
       setLoading(false);
     }
-  }, [page, search, status, severity, category]);
+  }, [page, search, status, severity, category, refreshKey]);
 
   /*
    * Initial load + reload whenever
@@ -499,16 +501,18 @@ const ServiceRequestList = ({
                           <Pencil size={16} />
                         </button>
 
-                        <button
-                          type="button"
-                          className="request-action delete"
-                          onClick={() =>
-                            handleDelete(request._id)
-                          }
-                          title="Delete"
-                        >
-                          <Trash2 size={16} />
-                        </button>
+                        {currentUserRole === "admin" && (
+                          <button
+                            type="button"
+                            className="request-action delete"
+                            onClick={() =>
+                              handleDelete(request._id)
+                            }
+                            title="Delete"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

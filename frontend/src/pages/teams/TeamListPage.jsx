@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 import api from "../../services/api";
+import { useAppSelector } from "../../app/hooks";
 
 import CreateTeamModal from "./CreateTeamModal";
 import EditTeamModal from "./EditTeamModal";
@@ -21,6 +22,10 @@ import ViewTeamModal from "./ViewTeamModal";
 import "./TeamListPage.css";
 
 const TeamListPage = () => {
+  const currentUserRole = useAppSelector(
+    (state) => state.auth.user?.role
+  );
+  const canManageTeams = currentUserRole === "admin";
   const [teams, setTeams] = useState([]);
 
   const [loading, setLoading] = useState(true);
@@ -201,20 +206,24 @@ const TeamListPage = () => {
             <div>
               <h1>Teams</h1>
               <p>
-                Manage support teams and their assigned agents.
+                {canManageTeams
+                  ? "Manage support teams and their assigned agents."
+                  : "View support teams and their assigned agents."}
               </p>
             </div>
           </div>
         </div>
 
-        <button
-          type="button"
-          className="team-add-button"
-          onClick={() => setShowCreateModal(true)}
-        >
-          <Plus size={17} />
-          Add Team
-        </button>
+        {canManageTeams && (
+          <button
+            type="button"
+            className="team-add-button"
+            onClick={() => setShowCreateModal(true)}
+          >
+            <Plus size={17} />
+            Add Team
+          </button>
+        )}
       </div>
 
       <div className="team-toolbar">
@@ -362,7 +371,8 @@ const TeamListPage = () => {
                           <Eye size={16} />
                         </button>
 
-                        <button
+                        {canManageTeams && (
+<button
                           type="button"
                           className="team-action edit"
                           title="Edit"
@@ -370,8 +380,10 @@ const TeamListPage = () => {
                         >
                           <Pencil size={16} />
                         </button>
+)}
 
-                        <button
+                        {canManageTeams && (
+<button
                           type="button"
                           className="team-action status"
                           title={
@@ -386,8 +398,10 @@ const TeamListPage = () => {
                         >
                           <Power size={16} />
                         </button>
+)}
 
-                        <button
+                        {canManageTeams && (
+<button
                           type="button"
                           className="team-action delete"
                           title="Delete"
@@ -398,6 +412,7 @@ const TeamListPage = () => {
                         >
                           <Trash2 size={16} />
                         </button>
+)}
                       </div>
                     </td>
                   </tr>
@@ -442,14 +457,14 @@ const TeamListPage = () => {
         </div>
       </div>
 
-      {showCreateModal && (
+      {canManageTeams && showCreateModal && (
         <CreateTeamModal
           onClose={() => setShowCreateModal(false)}
           onSuccess={handleCreateSuccess}
         />
       )}
 
-      {showEditModal && selectedTeam && (
+      {canManageTeams && showEditModal && selectedTeam && (
         <EditTeamModal
           team={selectedTeam}
           onClose={() => {
@@ -468,6 +483,7 @@ const TeamListPage = () => {
             setSelectedTeam(null);
           }}
           onUpdate={handleViewUpdate}
+          canManageTeams={canManageTeams}
         />
       )}
     </div>

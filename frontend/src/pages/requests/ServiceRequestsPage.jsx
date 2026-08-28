@@ -6,155 +6,87 @@ import ViewServiceRequestModal from "./ViewServiceRequestModal";
 import EditServiceRequestModal from "./EditServiceRequestModal";
 
 import api from "../../services/api";
+import { useAppSelector } from "../../app/hooks";
 
 const ServiceRequestsPage = () => {
+  const user = useAppSelector((state) => state.auth.user);
+  const currentUserRole = user?.role;
+
   const [customers, setCustomers] = useState([]);
   const [teams, setTeams] = useState([]);
   const [agents, setAgents] = useState([]);
-
   const [loadingOptions, setLoadingOptions] = useState(true);
   const [optionsError, setOptionsError] = useState("");
-
   const [showCreate, setShowCreate] = useState(false);
-
-  const [selectedRequest, setSelectedRequest] =
-    useState(null);
-
+  const [selectedRequest, setSelectedRequest] = useState(null);
   const [showView, setShowView] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
-
-  /*
-   * Used to refresh the service request grid
-   * after create/edit.
-   */
   const [refreshKey, setRefreshKey] = useState(0);
 
-  /*
-   * Load customers, teams and agents.
-   *
-   * These values are used by both the
-   * Create and Edit request modals.
-   */
   const loadAssignmentData = useCallback(async () => {
     try {
       setLoadingOptions(true);
       setOptionsError("");
 
-      const [customersResponse, teamsResponse, agentsResponse] =
-        await Promise.all([
-          api.get("/customers", {
-            params: {
-              page: 1,
-              limit: 100,
-              sortBy: "name",
-              sortOrder: "asc",
-            },
-          }),
+      const customersResponse = await api.get("/customers", {
+        params: {
+          page: 1,
+          limit: 100,
+          sortBy: "name",
+          sortOrder: "asc",
+        },
+      });
 
+      const customersData =
+        customersResponse.data?.data || customersResponse.data;
+      setCustomers(customersData?.customers || []);
+
+      // Assignment directories are needed only by management roles.
+      if (currentUserRole === "admin" || currentUserRole === "manager") {
+        const [teamsResponse, agentsResponse] = await Promise.all([
           api.get("/teams", {
-            params: {
-              page: 1,
-              limit: 100,
-            },
+            params: { page: 1, limit: 100 },
           }),
-
           api.get("/users", {
             params: {
               page: 1,
               limit: 100,
               role: "agent",
+              isActive: true,
             },
           }),
         ]);
 
-      /*
-       * Customers
-       */
-      const customersData =
-        customersResponse.data?.data ||
-        customersResponse.data;
+        const teamsData = teamsResponse.data?.data || teamsResponse.data;
+        setTeams(teamsData?.teams || []);
 
-      setCustomers(
-        customersData?.customers ||
-          customersData?.users ||
-          customersData?.data ||
-          []
-      );
-
-      /*
-       * Teams
-       */
-      const teamsData =
-        teamsResponse.data?.data ||
-        teamsResponse.data;
-
-      setTeams(
-        teamsData?.teams ||
-          teamsData?.data ||
-          []
-      );
-
-      /*
-       * Agents
-       */
-      const agentsData =
-        agentsResponse.data?.data ||
-        agentsResponse.data;
-
-      let agentList =
-        agentsData?.users ||
-        agentsData?.agents ||
-        agentsData?.data ||
-        [];
-
-      /*
-       * Safety filter.
-       *
-       * Even if the backend returns all users,
-       * only users with agent role should appear
-       * in the Support Agent dropdown.
-       */
-      if (Array.isArray(agentList)) {
-        agentList = agentList.filter(
-          (user) => user.role === "agent"
-        );
+        const agentsData = agentsResponse.data?.data || agentsResponse.data;
+        const agentList = Array.isArray(agentsData?.users)
+          ? agentsData.users.filter((item) => item.role === "agent")
+          : [];
+        setAgents(agentList);
+      } else {
+        setTeams([]);
+        setAgents([]);
       }
-
-      setAgents(agentList);
     } catch (error) {
-      console.error(
-        "Failed to load service request options:",
-        error
-      );
-
+      console.error("Failed to load service request options:", error);
       setOptionsError(
         error.response?.data?.message ||
-          "Failed to load customers, teams and agents."
+          "Failed to load service request options."
       );
     } finally {
       setLoadingOptions(false);
     }
-  }, []);
+  }, [currentUserRole]);
 
-  /*
-   * Initial load.
-   */
   useEffect(() => {
     loadAssignmentData();
   }, [loadAssignmentData]);
 
-  /*
-   * Create success
-   *
-   * 1. Close modal
-   * 2. Reload dropdown data
-   * 3. Reload request grid
-   */
   const handleCreateSuccess = async () => {
     setShowCreate(false);
-
     await loadAssignmentData();
-
     setRefreshKey((current) => current + 1);
   };
 
@@ -168,20 +100,10 @@ const ServiceRequestsPage = () => {
     setShowEdit(true);
   };
 
-  /*
-   * Edit success
-   *
-   * 1. Close modal
-   * 2. Clear selected request
-   * 3. Reload dropdown data
-   * 4. Reload request grid
-   */
   const handleEditSuccess = async () => {
     setShowEdit(false);
     setSelectedRequest(null);
-
     await loadAssignmentData();
-
     setRefreshKey((current) => current + 1);
   };
 
@@ -195,6 +117,7 @@ const ServiceRequestsPage = () => {
 
       <ServiceRequestList
         refreshKey={refreshKey}
+        currentUserRole={currentUserRole}
         onCreate={() => setShowCreate(true)}
         onView={handleView}
         onEdit={handleEdit}
@@ -205,6 +128,7 @@ const ServiceRequestsPage = () => {
           customers={customers}
           teams={teams}
           agents={agents}
+          currentUserRole={currentUserRole}
           loadingOptions={loadingOptions}
           onClose={() => setShowCreate(false)}
           onSuccess={handleCreateSuccess}
@@ -227,6 +151,7 @@ const ServiceRequestsPage = () => {
           customers={customers}
           teams={teams}
           agents={agents}
+          currentUserRole={currentUserRole}
           loadingOptions={loadingOptions}
           onClose={() => {
             setShowEdit(false);

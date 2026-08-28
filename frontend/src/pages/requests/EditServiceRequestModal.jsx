@@ -16,7 +16,9 @@ const EditServiceRequestModal = ({
   customers = [],
   teams = [],
   agents = [],
+  currentUserRole,
 }) => {
+  const isAgent = currentUserRole === "agent";
   const [formData, setFormData] = useState({
     customer: "",
     subject: "",
@@ -149,19 +151,18 @@ const EditServiceRequestModal = ({
       setLoading(true);
       setApiError("");
 
-      const payload = {
-        customer: formData.customer,
-        subject: formData.subject.trim(),
-        description:
-          formData.description.trim(),
-        category: formData.category,
-        severity: formData.severity,
-        status: formData.status,
-        assignedTeam:
-          formData.assignedTeam || null,
-        assignedAgent:
-          formData.assignedAgent || null,
-      };
+      const payload = isAgent
+        ? { status: formData.status }
+        : {
+            customer: formData.customer,
+            subject: formData.subject.trim(),
+            description: formData.description.trim(),
+            category: formData.category,
+            severity: formData.severity,
+            status: formData.status,
+            assignedTeam: formData.assignedTeam || null,
+            assignedAgent: formData.assignedAgent || null,
+          };
 
       await api.put(
         `/requests/${requestId}`,
@@ -231,6 +232,12 @@ const EditServiceRequestModal = ({
             </div>
           )}
 
+          {isAgent && (
+            <div className="edit-request-api-error">
+              Support agents can update status only. Assignment and request details are managed by support managers.
+            </div>
+          )}
+
           <div className="edit-request-grid">
             <div className="edit-request-field">
               <label>
@@ -241,7 +248,7 @@ const EditServiceRequestModal = ({
                 name="customer"
                 value={formData.customer}
                 onChange={handleChange}
-                disabled={loading}
+                disabled={loading || isAgent}
               >
                 <option value="">
                   Select customer
@@ -279,7 +286,7 @@ const EditServiceRequestModal = ({
                 name="category"
                 value={formData.category}
                 onChange={handleChange}
-                disabled={loading}
+                disabled={loading || isAgent}
               >
                 <option value="Technical Issue">
                   Technical Issue
@@ -317,7 +324,7 @@ const EditServiceRequestModal = ({
                 name="subject"
                 value={formData.subject}
                 onChange={handleChange}
-                disabled={loading}
+                disabled={loading || isAgent}
               />
 
               {errors.subject && (
@@ -337,7 +344,7 @@ const EditServiceRequestModal = ({
                 rows="5"
                 value={formData.description}
                 onChange={handleChange}
-                disabled={loading}
+                disabled={loading || isAgent}
               />
 
               {errors.description && (
@@ -356,7 +363,7 @@ const EditServiceRequestModal = ({
                 name="severity"
                 value={formData.severity}
                 onChange={handleChange}
-                disabled={loading}
+                disabled={loading || isAgent}
               >
                 <option value="Critical">
                   Critical
@@ -424,7 +431,7 @@ const EditServiceRequestModal = ({
                 name="assignedTeam"
                 value={formData.assignedTeam}
                 onChange={handleChange}
-                disabled={loading}
+                disabled={loading || isAgent}
               >
                 <option value="">
                   Unassigned
@@ -456,7 +463,7 @@ const EditServiceRequestModal = ({
                 name="assignedAgent"
                 value={formData.assignedAgent}
                 onChange={handleChange}
-                disabled={loading}
+                disabled={loading || isAgent}
               >
                 <option value="">
                   Unassigned

@@ -15,6 +15,7 @@ const CreateServiceRequestModal = ({
   customers = [],
   teams = [],
   agents = [],
+  currentUserRole,
 }) => {
   const [formData, setFormData] = useState({
     customer: "",
@@ -350,6 +351,8 @@ const CreateServiceRequestModal = ({
               </select>
             </div>
 
+            {currentUserRole !== "agent" && (
+              <>
             <div className="create-request-field">
               <label htmlFor="request-team">
                 Support Team
@@ -415,6 +418,8 @@ const CreateServiceRequestModal = ({
                 ))}
               </select>
             </div>
+              </>
+            )}
           </div>
 
           <div className="create-request-footer">

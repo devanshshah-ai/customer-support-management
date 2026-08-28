@@ -17,6 +17,7 @@ const ViewTeamModal = ({
   team,
   onClose,
   onUpdate,
+  canManageTeams = false,
 }) => {
   const [teamData, setTeamData] = useState(team);
 
@@ -87,8 +88,10 @@ const ViewTeamModal = ({
 
   useEffect(() => {
     fetchTeam();
-    fetchAgents();
-  }, [team.id]);
+    if (canManageTeams) {
+      fetchAgents();
+    }
+  }, [team.id, canManageTeams]);
 
   const memberIds = new Set(
     (teamData?.members || []).map(
@@ -345,23 +348,19 @@ const ViewTeamModal = ({
                             </span>
                           </div>
 
-                          <button
-                            type="button"
-                            className="view-team-remove"
-                            disabled={
-                              actionLoading
-                            }
-                            onClick={() =>
-                              handleRemoveMember(
-                                member
-                              )
-                            }
-                            title="Remove agent"
-                          >
-                            <UserMinus
-                              size={15}
-                            />
-                          </button>
+                          {canManageTeams && (
+                            <button
+                              type="button"
+                              className="view-team-remove"
+                              disabled={actionLoading}
+                              onClick={() =>
+                                handleRemoveMember(member)
+                              }
+                              title="Remove agent"
+                            >
+                              <UserMinus size={15} />
+                            </button>
+                          )}
                         </div>
                       )
                     )
@@ -369,6 +368,7 @@ const ViewTeamModal = ({
                 </div>
               </div>
 
+              {canManageTeams && (
               <div className="view-team-add-section">
                 <div>
                   <h3>Add Agent</h3>
@@ -446,6 +446,7 @@ const ViewTeamModal = ({
                   </span>
                 )}
               </div>
+              )}
             </>
           )}
         </div>
