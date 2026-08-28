@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const ServiceRequest = require("../models/ServiceRequest");
 const { getSlaStatus } = require("./slaService");
 const { getRequestScope } = require("./requestAccessService");
@@ -6,6 +7,28 @@ const withScope = (scope, extra = {}) => ({
   ...scope,
   ...extra,
 });
+
+const toAggregateScope = (scope) => {
+  const aggregateScope = { ...scope };
+
+  if (
+    typeof aggregateScope.assignedAgent === "string" &&
+    mongoose.Types.ObjectId.isValid(aggregateScope.assignedAgent)
+  ) {
+    aggregateScope.assignedAgent = new mongoose.Types.ObjectId(
+      aggregateScope.assignedAgent
+    );
+  }
+
+  return aggregateScope;
+};
+
+const normalizeBreakdown = (items, key) =>
+  items.map((item) => ({
+    [key]: item._id || "Unspecified",
+    label: item._id || "Unspecified",
+    count: item.count || 0,
+  }));
 
 const getDashboardSummary = async (actor) => {
   const scope = getRequestScope(actor);
@@ -82,8 +105,9 @@ const getDashboardSummary = async (actor) => {
 
 const getDashboardAnalytics = async (actor) => {
   const scope = getRequestScope(actor);
-  const matchStage = Object.keys(scope).length
-    ? [{ $match: scope }]
+  const aggregateScope = toAggregateScope(scope);
+  const matchStage = Object.keys(aggregateScope).length
+    ? [{ $match: aggregateScope }]
     : [];
 
   const [
@@ -213,12 +237,28 @@ const getDashboardAnalytics = async (actor) => {
     averageResolution[0]?.averageResolutionTimeMs || 0;
 
   return {
-    requestsByCategory,
-    requestsBySeverity,
-    requestsByStatus,
-    agentWorkload,
+    requestsByCategory: normalizeBreakdown(
+      requestsByCategory,
+      "category"
+    ),
+    requestsBySeverity: normalizeBreakdown(
+      requestsBySeverity,
+      "severity"
+    ),
+    requestsByStatus: normalizeBreakdown(
+      requestsByStatus,
+      "status"
+    ),
+    agentWorkload: agentWorkload.map((item) => ({
+      ...item,
+      label: item.agent?.name || "Unassigned Agent",
+      count: item.totalRequests || 0,
+    })),
     averageResolutionTime: {
       milliseconds: averageResolutionTimeMs,
+      minutes: Number(
+        (averageResolutionTimeMs / (1000 * 60)).toFixed(2)
+      ),
       hours: Number(
         (averageResolutionTimeMs / (1000 * 60 * 60)).toFixed(2)
       ),

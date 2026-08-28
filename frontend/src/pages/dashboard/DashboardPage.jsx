@@ -45,6 +45,8 @@ const labelOf = (item) =>
   item?.category ??
   item?.severity ??
   item?.status ??
+  item?.agent?.name ??
+  item?._id ??
   "Unknown";
 
 const valueOf = (item) =>
@@ -52,7 +54,9 @@ const valueOf = (item) =>
     item?.count,
     item?.total,
     item?.value,
-    item?.requests
+    item?.requests,
+    item?.totalRequests,
+    item?.openRequests
   );
 
 const formatDuration = (value) => {
@@ -68,9 +72,21 @@ const formatDuration = (value) => {
     return value;
   }
 
-  const minutes = Number(value);
+  let minutes = value;
 
-  if (!Number.isFinite(minutes)) {
+  if (typeof value === "object") {
+    if (Number.isFinite(Number(value.minutes))) {
+      minutes = Number(value.minutes);
+    } else if (Number.isFinite(Number(value.milliseconds))) {
+      minutes = Number(value.milliseconds) / (1000 * 60);
+    } else if (Number.isFinite(Number(value.hours))) {
+      minutes = Number(value.hours) * 60;
+    }
+  }
+
+  minutes = Number(minutes);
+
+  if (!Number.isFinite(minutes) || minutes <= 0) {
     return "—";
   }
 

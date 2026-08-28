@@ -6,7 +6,9 @@
   flex-shrink: 0;
   background: #ffffff;
   border-right: 1px solid #e5e7eb;
-  position: relative;
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
   z-index: 50;
   transition: transform 0.3s ease;
 }

@@ -6,6 +6,10 @@ const User = require("../models/User");
 const Team = require("../models/Team");
 const Customer = require("../models/Customer");
 const ServiceRequest = require("../models/ServiceRequest");
+const Message = require("../models/Message");
+const Notification = require("../models/Notification");
+const AuditLog = require("../models/AuditLog");
+const Counter = require("../models/Counter");
 
 const MONGODB_URI = process.env.MONGODB_URI;
 
@@ -44,7 +48,11 @@ const seed = async () => {
 
     console.log("Clearing existing data...");
 
+    await Message.deleteMany({});
+    await Notification.deleteMany({});
+    await AuditLog.deleteMany({});
     await ServiceRequest.deleteMany({});
+    await Counter.deleteMany({});
     await Team.deleteMany({});
     await Customer.deleteMany({});
     await User.deleteMany({});
@@ -720,13 +728,357 @@ const seed = async () => {
         status: "Open",
         hoursAgo: 10,
       }),
+
+      createRequest({
+        number: "SR-10016",
+        customer: globalRetail,
+        subject: "Refund not reflected on statement",
+        description:
+          "The approved refund has not appeared on the latest account statement.",
+        category: "Billing",
+        severity: "High",
+        assignedTeam: billingTeam,
+        assignedAgent: priya,
+        status: "Under Investigation",
+        hoursAgo: 4,
+      }),
+
+      createRequest({
+        number: "SR-10017",
+        customer: acme,
+        subject: "SSO configuration assistance",
+        description:
+          "The enterprise customer needs help completing SSO configuration.",
+        category: "Account",
+        severity: "Medium",
+        assignedTeam: enterpriseTeam,
+        assignedAgent: rahul,
+        status: "Waiting for Customer",
+        hoursAgo: 18,
+      }),
+
+      createRequest({
+        number: "SR-10018",
+        customer: rohan,
+        subject: "Mobile app feature availability",
+        description:
+          "Customer would like information about recently released mobile features.",
+        category: "Product Information",
+        severity: "Low",
+        assignedTeam: customerSuccessTeam,
+        assignedAgent: sneha,
+        status: "Resolved",
+        hoursAgo: 48,
+        resolutionHoursAgo: 40,
+      }),
+
+      createRequest({
+        number: "SR-10019",
+        customer: technova,
+        subject: "Webhook events delayed",
+        description:
+          "Webhook deliveries are arriving several minutes late during peak traffic.",
+        category: "Technical Issue",
+        severity: "Medium",
+        assignedTeam: technicalTeam,
+        assignedAgent: priya,
+        status: "Open",
+        hoursAgo: 3,
+      }),
+
+      createRequest({
+        number: "SR-10020",
+        customer: neha,
+        subject: "Package delivered to wrong location",
+        description:
+          "The package status shows delivered but the customer did not receive it.",
+        category: "Delivery",
+        severity: "High",
+        assignedTeam: customerSuccessTeam,
+        assignedAgent: amit,
+        status: "Under Investigation",
+        hoursAgo: 5,
+      }),
+
+      createRequest({
+        number: "SR-10021",
+        customer: finserve,
+        subject: "Monthly invoice export question",
+        description:
+          "Finance team needs help exporting monthly invoices for reconciliation.",
+        category: "Billing",
+        severity: "Low",
+        assignedTeam: billingTeam,
+        assignedAgent: amit,
+        status: "Resolved",
+        hoursAgo: 36,
+        resolutionHoursAgo: 28,
+      }),
+
+      createRequest({
+        number: "SR-10022",
+        customer: kavya,
+        subject: "Repeated login verification prompts",
+        description:
+          "Customer receives verification prompts on every login from a trusted device.",
+        category: "Account",
+        severity: "Medium",
+        assignedTeam: customerSuccessTeam,
+        assignedAgent: sneha,
+        status: "Open",
+        hoursAgo: 8,
+      }),
+
+      createRequest({
+        number: "SR-10023",
+        customer: globalRetail,
+        subject: "Escalation about delayed response",
+        description:
+          "Enterprise customer requested escalation after a delayed support response.",
+        category: "Complaint",
+        severity: "High",
+        assignedTeam: enterpriseTeam,
+        assignedAgent: rahul,
+        status: "Under Investigation",
+        hoursAgo: 6,
+      }),
+
+      createRequest({
+        number: "SR-10024",
+        customer: acme,
+        subject: "Delivery tracking API documentation",
+        description:
+          "Customer needs clarification on delivery tracking API response fields.",
+        category: "Product Information",
+        severity: "Low",
+        assignedTeam: technicalTeam,
+        assignedAgent: priya,
+        status: "Closed",
+        hoursAgo: 80,
+        resolutionHoursAgo: 68,
+      }),
     ];
 
-    await ServiceRequest.insertMany(requests);
+    const savedRequests = await ServiceRequest.insertMany(requests);
 
     console.log(
       `${requests.length} service requests created.`
     );
+
+    await Counter.create({
+      _id: "serviceRequest",
+      sequence: 10024,
+    });
+
+    const requestByNumber = Object.fromEntries(
+      savedRequests.map((request) => [
+        request.requestNumber,
+        request,
+      ])
+    );
+
+    /*
+     * ==========================================
+     * CONVERSATION HISTORY
+     * ==========================================
+     */
+
+    const messages = await Message.insertMany([
+      {
+        request: requestByNumber["SR-10001"]._id,
+        author: rahul._id,
+        type: "customer",
+        message:
+          "We are investigating the production outage as a critical priority. Initial checks point to the application gateway.",
+        createdAt: new Date(Date.now() - 75 * 60 * 1000),
+      },
+      {
+        request: requestByNumber["SR-10001"]._id,
+        author: rahul._id,
+        type: "internal",
+        message:
+          "Escalated to infrastructure team. Keep the customer updated every 30 minutes.",
+        createdAt: new Date(Date.now() - 60 * 60 * 1000),
+      },
+      {
+        request: requestByNumber["SR-10002"]._id,
+        author: priya._id,
+        type: "customer",
+        message:
+          "Thanks for the details. Could you confirm whether the issue occurs in an incognito browser as well?",
+        createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000),
+      },
+      {
+        request: requestByNumber["SR-10003"]._id,
+        author: rahul._id,
+        type: "internal",
+        message:
+          "The errors began after deployment v2.8. Comparing gateway logs with the previous release.",
+        createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
+      },
+      {
+        request: requestByNumber["SR-10016"]._id,
+        author: priya._id,
+        type: "customer",
+        message:
+          "We have located the refund transaction and are checking the settlement timeline with billing.",
+        createdAt: new Date(Date.now() - 90 * 60 * 1000),
+      },
+      {
+        request: requestByNumber["SR-10020"]._id,
+        author: amit._id,
+        type: "customer",
+        message:
+          "We have opened a delivery trace and will update you as soon as the courier confirms the hand-off location.",
+        createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
+      },
+    ]);
+
+    /*
+     * ==========================================
+     * NOTIFICATIONS
+     * ==========================================
+     */
+
+    const notifications = await Notification.insertMany([
+      {
+        recipient: admin._id,
+        type: "SLA_BREACHED",
+        title: "SLA breach requires attention",
+        message: "SR-10015 has exceeded its critical SLA target.",
+        serviceRequest: requestByNumber["SR-10015"]._id,
+        isRead: false,
+      },
+      {
+        recipient: admin._id,
+        type: "CRITICAL_REQUEST",
+        title: "Critical request active",
+        message: "SR-10001 is a critical production outage.",
+        serviceRequest: requestByNumber["SR-10001"]._id,
+        isRead: false,
+      },
+      {
+        recipient: admin._id,
+        type: "GENERAL",
+        title: "Weekly support overview ready",
+        message: "Dashboard metrics are ready for your weekly support review.",
+        isRead: true,
+        readAt: new Date(),
+      },
+      {
+        recipient: manager._id,
+        type: "SLA_BREACHED",
+        title: "High priority SLA breach",
+        message: "SR-10014 is still under investigation after its SLA deadline.",
+        serviceRequest: requestByNumber["SR-10014"]._id,
+        isRead: false,
+      },
+      {
+        recipient: manager._id,
+        type: "GENERAL",
+        title: "Workload review",
+        message: "Several agents have active high-priority requests to review.",
+        isRead: false,
+      },
+      {
+        recipient: rahul._id,
+        type: "CRITICAL_REQUEST",
+        title: "Critical request assigned",
+        message: "SR-10015 requires immediate attention.",
+        serviceRequest: requestByNumber["SR-10015"]._id,
+        isRead: false,
+      },
+      {
+        recipient: rahul._id,
+        type: "REQUEST_ASSIGNED",
+        title: "New request assigned",
+        message: "SR-10023 has been assigned to you.",
+        serviceRequest: requestByNumber["SR-10023"]._id,
+        isRead: false,
+      },
+      {
+        recipient: priya._id,
+        type: "REQUEST_ASSIGNED",
+        title: "New billing request assigned",
+        message: "SR-10016 has been assigned to you.",
+        serviceRequest: requestByNumber["SR-10016"]._id,
+        isRead: false,
+      },
+      {
+        recipient: priya._id,
+        type: "REQUEST_ASSIGNED",
+        title: "Technical request assigned",
+        message: "SR-10019 has been assigned to you.",
+        serviceRequest: requestByNumber["SR-10019"]._id,
+        isRead: false,
+      },
+      {
+        recipient: priya._id,
+        type: "STATUS_CHANGED",
+        title: "Request status updated",
+        message: "SR-10024 has been closed.",
+        serviceRequest: requestByNumber["SR-10024"]._id,
+        isRead: true,
+        readAt: new Date(),
+      },
+      {
+        recipient: amit._id,
+        type: "REQUEST_ASSIGNED",
+        title: "Delivery issue assigned",
+        message: "SR-10020 has been assigned to you.",
+        serviceRequest: requestByNumber["SR-10020"]._id,
+        isRead: false,
+      },
+      {
+        recipient: sneha._id,
+        type: "REQUEST_ASSIGNED",
+        title: "Account request assigned",
+        message: "SR-10022 has been assigned to you.",
+        serviceRequest: requestByNumber["SR-10022"]._id,
+        isRead: false,
+      },
+    ]);
+
+    /*
+     * ==========================================
+     * AUDIT TRAIL
+     * ==========================================
+     */
+
+    const auditLogs = await AuditLog.insertMany([
+      {
+        user: admin._id,
+        action: "CREATE",
+        entityType: "ServiceRequest",
+        entityId: requestByNumber["SR-10001"]._id,
+        description: "Seeded critical production support request.",
+      },
+      {
+        user: manager._id,
+        action: "ASSIGN",
+        entityType: "ServiceRequest",
+        entityId: requestByNumber["SR-10016"]._id,
+        description: "Assigned refund investigation to Priya Mehta.",
+      },
+      {
+        user: rahul._id,
+        action: "NOTE_ADDED",
+        entityType: "Message",
+        entityId: messages[1]._id,
+        description: "Added internal escalation note to SR-10001.",
+      },
+      {
+        user: priya._id,
+        action: "MESSAGE_ADDED",
+        entityType: "Message",
+        entityId: messages[2]._id,
+        description: "Sent customer-facing response on SR-10002.",
+      },
+    ]);
+
+    console.log(`${messages.length} messages created.`);
+    console.log(`${notifications.length} notifications created.`);
+    console.log(`${auditLogs.length} audit logs created.`);
 
     /*
      * ==========================================
@@ -772,6 +1124,9 @@ const seed = async () => {
     console.log(
       `Service Requests : ${requests.length}`
     );
+    console.log(`Messages         : ${messages.length}`);
+    console.log(`Notifications    : ${notifications.length}`);
+    console.log(`Audit Logs       : ${auditLogs.length}`);
 
     console.log("");
     console.log(

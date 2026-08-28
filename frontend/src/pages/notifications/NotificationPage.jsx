@@ -14,10 +14,16 @@ import {
 } from "lucide-react";
 
 import api from "../../services/api";
+import { useAppDispatch } from "../../hooks/reduxHooks";
+import {
+  decrementUnreadCount,
+  setUnreadCount as setGlobalUnreadCount,
+} from "../../features/notifications/notificationSlice";
 
 import "./NotificationPage.css";
 
 const NotificationPage = () => {
+  const dispatch = useAppDispatch();
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -52,7 +58,10 @@ const NotificationPage = () => {
       const result = response.data?.data;
 
       setNotifications(result?.notifications || []);
-      setUnreadCount(result?.unreadCount || 0);
+
+      const nextUnreadCount = result?.unreadCount || 0;
+      setUnreadCount(nextUnreadCount);
+      dispatch(setGlobalUnreadCount(nextUnreadCount));
 
       setPagination(
         result?.pagination || {
@@ -79,7 +88,7 @@ const NotificationPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, unreadOnly]);
+  }, [dispatch, page, unreadOnly]);
 
   useEffect(() => {
     getNotifications();
@@ -111,6 +120,7 @@ const NotificationPage = () => {
       setUnreadCount((current) =>
         Math.max(current - 1, 0)
       );
+      dispatch(decrementUnreadCount());
     } catch (err) {
       console.error(
         "Failed to mark notification as read:",
@@ -143,6 +153,7 @@ const NotificationPage = () => {
       );
 
       setUnreadCount(0);
+      dispatch(setGlobalUnreadCount(0));
     } catch (err) {
       console.error(
         "Failed to mark all notifications as read:",

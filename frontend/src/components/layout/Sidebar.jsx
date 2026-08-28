@@ -42,15 +42,46 @@ const menuItems = [
   },
 ];
 
+const SupportLink = ({
+  to,
+  icon,
+  children,
+  badge,
+  onClick,
+}) => (
+  <NavLink
+    to={to}
+    onClick={onClick}
+    className={({ isActive }) =>
+      `sidebar-nav-item sidebar-support-item ${
+        isActive ? "sidebar-nav-item-active" : ""
+      }`
+    }
+  >
+    {({ isActive }) => (
+      <>
+        {isActive && <span className="active-indicator" />}
+        <span className="sidebar-nav-icon">{icon}</span>
+        <span>{children}</span>
+        {badge > 0 && (
+          <span className="notification-badge">
+            {badge > 99 ? "99+" : badge}
+          </span>
+        )}
+      </>
+    )}
+  </NavLink>
+);
+
 const Sidebar = ({ isOpen, onClose }) => {
-  const user = useAppSelector(
-    (state) => state.auth.user
+  const user = useAppSelector((state) => state.auth.user);
+  const unreadCount = useAppSelector(
+    (state) => state.notifications?.unreadCount || 0
   );
 
   const role = user?.role || "agent";
-
-  const visibleMenuItems = menuItems.filter(
-    (item) => item.roles.includes(role)
+  const visibleMenuItems = menuItems.filter((item) =>
+    item.roles.includes(role)
   );
 
   const getInitials = () => {
@@ -60,6 +91,7 @@ const Sidebar = ({ isOpen, onClose }) => {
 
     return user.name
       .split(" ")
+      .filter(Boolean)
       .map((word) => word[0])
       .join("")
       .slice(0, 2)
@@ -71,10 +103,7 @@ const Sidebar = ({ isOpen, onClose }) => {
       return "User";
     }
 
-    return (
-      value.charAt(0).toUpperCase() +
-      value.slice(1)
-    );
+    return value.charAt(0).toUpperCase() + value.slice(1);
   };
 
   return (
@@ -88,16 +117,9 @@ const Sidebar = ({ isOpen, onClose }) => {
         />
       )}
 
-      <aside
-        className={`sidebar ${
-          isOpen ? "sidebar-open" : ""
-        }`}
-      >
-        {/* Brand */}
+      <aside className={`sidebar ${isOpen ? "sidebar-open" : ""}`}>
         <div className="sidebar-brand">
-          <div className="sidebar-brand-logo">
-            CS
-          </div>
+          <div className="sidebar-brand-logo">CS</div>
 
           <div>
             <h1>Customer Support</h1>
@@ -105,24 +127,15 @@ const Sidebar = ({ isOpen, onClose }) => {
           </div>
         </div>
 
-        {/* User */}
         <div className="sidebar-user">
           <div className="sidebar-avatar-wrapper">
-            <div className="sidebar-avatar">
-              {getInitials()}
-            </div>
-
+            <div className="sidebar-avatar">{getInitials()}</div>
             <span className="online-indicator" />
           </div>
 
           <div className="sidebar-user-info">
-            <p className="sidebar-user-name">
-              {user?.name || "User"}
-            </p>
-
-            <p className="sidebar-user-role">
-              {formatRole(role)}
-            </p>
+            <p className="sidebar-user-name">{user?.name || "User"}</p>
+            <p className="sidebar-user-role">{formatRole(role)}</p>
 
             <div className="online-status">
               <span />
@@ -131,11 +144,8 @@ const Sidebar = ({ isOpen, onClose }) => {
           </div>
         </div>
 
-        {/* Navigation */}
         <div className="sidebar-content">
-          <p className="sidebar-section-title">
-            Main Menu
-          </p>
+          <p className="sidebar-section-title">Main Menu</p>
 
           <nav className="sidebar-nav">
             {visibleMenuItems.map((item) => (
@@ -145,22 +155,14 @@ const Sidebar = ({ isOpen, onClose }) => {
                 onClick={onClose}
                 className={({ isActive }) =>
                   `sidebar-nav-item ${
-                    isActive
-                      ? "sidebar-nav-item-active"
-                      : ""
+                    isActive ? "sidebar-nav-item-active" : ""
                   }`
                 }
               >
                 {({ isActive }) => (
                   <>
-                    {isActive && (
-                      <span className="active-indicator" />
-                    )}
-
-                    <span className="sidebar-nav-icon">
-                      {item.icon}
-                    </span>
-
+                    {isActive && <span className="active-indicator" />}
+                    <span className="sidebar-nav-icon">{item.icon}</span>
                     <span>{item.label}</span>
                   </>
                 )}
@@ -168,59 +170,39 @@ const Sidebar = ({ isOpen, onClose }) => {
             ))}
           </nav>
 
-          {/* Support */}
           <p className="sidebar-section-title sidebar-support-title">
             Support
           </p>
 
-          <div className="sidebar-nav">
-            <button
-              type="button"
-              className="sidebar-nav-item sidebar-support-item"
+          <nav className="sidebar-nav">
+            <SupportLink
+              to="/notifications"
+              icon="♢"
+              badge={unreadCount}
+              onClick={onClose}
             >
-              <span className="sidebar-nav-icon">
-                ♢
-              </span>
+              Notifications
+            </SupportLink>
 
-              <span>Notifications</span>
-
-              <span className="notification-badge">
-                3
-              </span>
-            </button>
-
-            <button
-              type="button"
-              className="sidebar-nav-item sidebar-support-item"
+            <SupportLink
+              to="/profile"
+              icon="⚙"
+              onClick={onClose}
             >
-              <span className="sidebar-nav-icon">
-                ⚙
-              </span>
+              Settings
+            </SupportLink>
+          </nav>
 
-              <span>Settings</span>
-            </button>
-          </div>
-
-          {/* Help */}
           <div className="sidebar-help">
-            <div className="sidebar-help-icon">
-              ?
-            </div>
-
+            <div className="sidebar-help-icon">?</div>
             <h3>Need help?</h3>
-
             <p>
-              Contact system support if you need
-              assistance.
+              Contact system support if you need assistance.
             </p>
-
-            <button type="button">
-              Contact Support
-            </button>
+            <button type="button">Contact Support</button>
           </div>
         </div>
 
-        {/* Footer */}
         <div className="sidebar-footer">
           <p>Customer Support Management</p>
           <span>v1.0.0</span>

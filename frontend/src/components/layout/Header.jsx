@@ -16,33 +16,35 @@ import "./Header.css";
 const pageInfo = {
   "/dashboard": {
     title: "Dashboard",
-    description:
-      "Overview of your support operations",
+    description: "Overview of your support operations",
   },
   "/customers": {
     title: "Customers",
-    description:
-      "Manage your customer information",
+    description: "Manage your customer information",
   },
   "/requests": {
     title: "Service Requests",
-    description:
-      "Track and manage service requests",
+    description: "Track and manage service requests",
   },
   "/teams": {
     title: "Teams",
-    description:
-      "Manage support teams and members",
+    description: "Manage support teams and members",
   },
   "/users": {
     title: "Users",
-    description:
-      "Manage system users and permissions",
+    description: "Manage system users and permissions",
   },
   "/reports": {
     title: "Reports",
-    description:
-      "View support performance reports",
+    description: "View support performance reports",
+  },
+  "/notifications": {
+    title: "Notifications",
+    description: "Review alerts and request activity",
+  },
+  "/profile": {
+    title: "My Profile",
+    description: "Manage your account and password",
   },
 };
 
@@ -51,18 +53,17 @@ const Header = ({ onMenuClick }) => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
-  const user = useAppSelector(
-    (state) => state.auth.user
+  const user = useAppSelector((state) => state.auth.user);
+  const unreadCount = useAppSelector(
+    (state) => state.notifications?.unreadCount || 0
   );
 
-  const [profileOpen, setProfileOpen] =
-    useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
 
   const currentPage =
     pageInfo[location.pathname] || {
       title: "Customer Support",
-      description:
-        "Manage your support operations",
+      description: "Manage your support operations",
     };
 
   const getInitials = () => {
@@ -72,6 +73,7 @@ const Header = ({ onMenuClick }) => {
 
     return user.name
       .split(" ")
+      .filter(Boolean)
       .map((word) => word[0])
       .join("")
       .slice(0, 2)
@@ -83,20 +85,18 @@ const Header = ({ onMenuClick }) => {
       return "User";
     }
 
-    return (
-      role.charAt(0).toUpperCase() +
-      role.slice(1)
-    );
+    return role.charAt(0).toUpperCase() + role.slice(1);
   };
 
   const handleLogout = () => {
     dispatch(logout());
-
     setProfileOpen(false);
+    navigate("/login", { replace: true });
+  };
 
-    navigate("/login", {
-      replace: true,
-    });
+  const openProfile = () => {
+    setProfileOpen(false);
+    navigate("/profile");
   };
 
   return (
@@ -108,10 +108,7 @@ const Header = ({ onMenuClick }) => {
           onClick={onMenuClick}
           aria-label="Open menu"
         >
-          <svg
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>
@@ -126,17 +123,28 @@ const Header = ({ onMenuClick }) => {
         <button
           type="button"
           className="notification-button"
-          aria-label="Notifications"
+          aria-label={
+            unreadCount > 0
+              ? `${unreadCount} unread notifications`
+              : "Notifications"
+          }
+          title={
+            unreadCount > 0
+              ? `${unreadCount} unread notifications`
+              : "Notifications"
+          }
+          onClick={() => navigate("/notifications")}
         >
-          <svg
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
             <path d="M10 21h4" />
           </svg>
 
-          <span className="notification-dot" />
+          {unreadCount > 0 && (
+            <span className="header-notification-badge">
+              {unreadCount > 99 ? "99+" : unreadCount}
+            </span>
+          )}
         </button>
 
         <div className="header-divider" />
@@ -145,35 +153,22 @@ const Header = ({ onMenuClick }) => {
           <button
             type="button"
             className="profile-button"
-            onClick={() =>
-              setProfileOpen(
-                (current) => !current
-              )
-            }
+            onClick={() => setProfileOpen((current) => !current)}
+            aria-expanded={profileOpen}
           >
             <div className="header-avatar-wrapper">
-              <div className="header-avatar">
-                {getInitials()}
-              </div>
-
+              <div className="header-avatar">{getInitials()}</div>
               <span className="header-online-dot" />
             </div>
 
             <div className="header-user-info">
-              <p>
-                {user?.name || "User"}
-              </p>
-
-              <span>
-                {formatRole(user?.role)}
-              </span>
+              <p>{user?.name || "User"}</p>
+              <span>{formatRole(user?.role)}</span>
             </div>
 
             <svg
               className={`profile-chevron ${
-                profileOpen
-                  ? "profile-chevron-open"
-                  : ""
+                profileOpen ? "profile-chevron-open" : ""
               }`}
               viewBox="0 0 24 24"
               aria-hidden="true"
@@ -185,13 +180,8 @@ const Header = ({ onMenuClick }) => {
           {profileOpen && (
             <div className="profile-dropdown">
               <div className="profile-dropdown-header">
-                <p>
-                  {user?.name || "User"}
-                </p>
-
-                <span>
-                  {user?.email || ""}
-                </span>
+                <p>{user?.name || "User"}</p>
+                <span>{user?.email || ""}</span>
 
                 <div className="role-badge">
                   <span />
@@ -200,13 +190,12 @@ const Header = ({ onMenuClick }) => {
               </div>
 
               <div className="profile-dropdown-actions">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setProfileOpen(false);
-                    navigate("/settings");
-                  }}
-                >
+                <button type="button" onClick={openProfile}>
+                  <span>♙</span>
+                  My Profile
+                </button>
+
+                <button type="button" onClick={openProfile}>
                   <span>⚙</span>
                   Account Settings
                 </button>
